@@ -250,7 +250,7 @@ nav h1 a {
 
 @media only screen and (max-width: 480px) {
   #restaurants-list li:last-child {
-    margin-bottom: 60px;
+    margin-bottom: 40px;
   }
 }
 
@@ -386,8 +386,7 @@ nav h1 a {
   width: 100%;
 }
 
-#restaurant-container,
-#reviews-container {
+#restaurant-container {
   margin: 160px 40px 30px;
 }
 
