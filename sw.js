@@ -2,7 +2,6 @@ const cacheName = "mws-restaurant-project";
 
 self.addEventListener("install", event => {
   const urlsToCache = [
-    "/",
     "/index.html",
     "/restaurant.html",
     "/css/styles.css",
@@ -10,7 +9,8 @@ self.addEventListener("install", event => {
     "/js/dbhelper.js",
     "/js/main.js",
     "js/register.js",
-    "js/restaurant_info.js"
+    "js/restaurant_info.js",
+    "js/img"
   ];
 
   event.waitUntil(
