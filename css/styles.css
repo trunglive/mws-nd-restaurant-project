@@ -168,7 +168,7 @@ nav #breadcrumb li a:hover {
 /* ====================== Restaurant Filtering ====================== */
 .filter-options {
   width: 100%;
-  height: 50px;
+  height: 100px;
   text-align: center;
   background-color: #3397db;
 }
@@ -188,7 +188,7 @@ nav #breadcrumb li a:hover {
   font-weight: normal;
   line-height: 1;
   margin: 0 20px;
-  padding-top: 10px;
+  padding-top: 20px;
 }
 
 .filter-options select {
@@ -261,6 +261,7 @@ nav #breadcrumb li a:hover {
 }
 
 #restaurants-list li h2 {
+  height: 50px;
   color: #f18200;
   font-family: Arial, sans-serif;
   font-size: 14pt;
