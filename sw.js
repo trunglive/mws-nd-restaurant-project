@@ -4,14 +4,14 @@ const offlineUrl = "index.html";
 self.addEventListener("install", event => {
   const urlsToCache = [
     offlineUrl,
-    "restaurant.html",
-    "css/styles.css",
-    "data/restaurants.json",
-    "js/dbhelper.js",
-    "js/main.js",
-    "js/register.js",
-    "js/restaurant_info.js",
-    "img/"
+    "/restaurant.html",
+    "/css/styles.css",
+    "/data/restaurants.json",
+    "/js/dbhelper.js",
+    "/js/main.js",
+    "/js/register.js",
+    "/js/restaurant_info.js",
+    "/img/"
   ];
 
   event.waitUntil(
