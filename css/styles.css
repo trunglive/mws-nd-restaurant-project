@@ -298,8 +298,8 @@ nav #breadcrumb li a:hover {
   width: 100%;
 }
 
-.inside #maincontent {
-}
+/* .inside #maincontent {
+} */
 
 @media only screen and (max-width: 1024px) {
   .inside #maincontent {
