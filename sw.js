@@ -6,7 +6,7 @@ self.addEventListener("install", event => {
     offlineUrl,
     "/restaurant.html",
     "/css/styles.css",
-    "/data/restaurants.json",
+    // "/data/restaurants.json",
     "/js/dbhelper.js",
     "/js/main.js",
     "/js/register.js",
