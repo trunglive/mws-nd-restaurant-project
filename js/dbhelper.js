@@ -33,7 +33,7 @@ class DBHelper {
 
     // Replace XHR approach with fetch API
     fetch(DBHelper.DATABASE_URL)
-      .then(restaurants => restaurants.json())
+      .then(data => data.json())
       .then(restaurants => {
         console.log(restaurants, 'success')
         callback(null, restaurants)
