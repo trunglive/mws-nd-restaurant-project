@@ -59,6 +59,8 @@ Start the server
 node server
 ```
 
+The default port is `1337`.
+
 **Setup project**
 
 ```shell
@@ -77,7 +79,15 @@ For Python 3.x:
 python3 -m http.server 8000
 ```
 
-Visit the application at: `http://localhost:8000`.
+Visit the application at `http://localhost:8000`.
+
+## Running the tests
+
+The app was tested on Google Chrome Google Chrome Version 68.0.3440.106 (64-bit).
+
+If you haven't installed Lighthouse plugin yet, head over to https://chrome.google.com/webstore/detail/lighthouse/blipmdconlkpinefehnmjammfjpmpbjk?hl=en and install it.
+
+At `http://localhost:8000`, click _Generate Report_ from Lighthouse to see the performance audits.
 
 ### Leaflet.js and Mapbox
 
