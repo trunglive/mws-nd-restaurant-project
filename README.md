@@ -20,7 +20,7 @@ The project will be incrementally enhanced after 3 stages:
   - Store data received from the server in an offline database using IndexedDB, which will create an app shell architecture.
   - Optimize the site to meet performance benchmarks from [Lighthouse](https://developers.google.com/web/tools/lighthouse/).
 - Stage 3:
-  - Take the connected application in Stage One and Stage Two and add additional functionality. Add a form to allow users to create their own reviews. If the app is offline, the form will defer updating to the remote database until a connection is established.
+  - Take the connected application in Stage One and Stage Two and add additional functionality. Connect the app to the updated [Node development server](https://github.com/udacity/mws-restaurant-stage-3). Add a form to allow users to create their own reviews. If the app is offline, the form will defer updating to the remote database until a connection is established.
   - Optimize the site to meet even stricter performance benchmarks than the previous project, and test again using [Lighthouse](https://developers.google.com/web/tools/lighthouse/). The goal is to score above 90 in Progressive Web App, Performance, and Accessibility.
 
 ### Prerequisites
@@ -33,8 +33,10 @@ In a terminal, check the version of Python you have: `python -V`. If you don't h
 
 Clone the provided code to create server
 
+For stage 3
+
 ```shell
-git clone https://github.com/udacity/mws-restaurant-stage-2.git
+git clone https://github.com/udacity/mws-restaurant-stage-3.git
 ```
 
 Install dependencies
@@ -83,7 +85,7 @@ The app was tested on Google Chrome Google Chrome Version 68.0.3440.106 (64-bit)
 
 If you haven't installed Lighthouse plugin yet, head over to https://chrome.google.com/webstore/detail/lighthouse/blipmdconlkpinefehnmjammfjpmpbjk?hl=en and install it.
 
-At `http://localhost:8000`, click _Generate Report_ from Lighthouse to see the performance audits.
+At `http://localhost:8000`, click _Generate report_ from Lighthouse to see the performance audits.
 
 ### Leaflet.js and Mapbox
 
@@ -95,4 +97,4 @@ Most of the code in this project has been written to the ES6 JavaScript specific
 
 ### License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License, see the [LICENSE](LICENSE) file for details.

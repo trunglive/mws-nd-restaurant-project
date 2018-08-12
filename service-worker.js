@@ -23,6 +23,8 @@ self.addEventListener("install", event => {
   );
 });
 
+
+// store data in IndexedDB database for offline usage
 const createDB = () => {
   const dbPromise = idb.open("mws", 1, upgradeDB => {
     const store = upgradeDB.createObjectStore("restaurants", {
