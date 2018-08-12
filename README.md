@@ -1,8 +1,4 @@
-# Mobile Web Specialist Certification Course
-
----
-
-## Three Stage Course Material Project - Restaurant Reviews
+# Mobile Web Specialist Certification Course - Restaurant Reviews Project
 
 ### Description
 
