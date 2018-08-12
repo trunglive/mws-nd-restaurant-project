@@ -2,7 +2,7 @@
 
 ### Description
 
-The original code for a restaurant reviews website is provided by [Udacity](https://www.udacity.com/course/mobile-web-specialist-nanodegree--nd024). The code can be found here: https://github.com/udacity/mws-restaurant-stage-1. The code has a lot of issues. It’s barely usable on a desktop browser, much less a mobile device. It also doesn’t include any standard accessibility features, and it doesn’t work offline at all.
+> The original code for a restaurant reviews website is provided by [Udacity](https://www.udacity.com/course/mobile-web-specialist-nanodegree--nd024). The code can be found here: https://github.com/udacity/mws-restaurant-stage-1. The code has a lot of issues. It’s barely usable on a desktop browser, much less a mobile device. It also doesn’t include any standard accessibility features, and it doesn’t work offline at all.
 
 ### Goal
 
@@ -77,7 +77,7 @@ python3 -m http.server 8000
 
 Visit the application at `http://localhost:8000`.
 
-## Running the tests
+### Running the tests
 
 The app was tested on Google Chrome Google Chrome Version 68.0.3440.106 (64-bit).
 
