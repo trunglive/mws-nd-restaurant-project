@@ -38,13 +38,13 @@
     <section id="map-container" aria-label="Map">
       <div id="map" role="application"></div>
     </section>
-    <section>
-      <div class="filter-options" aria-label="Filter Options" role="option">
+    <section> 
+      <div class="filter-options" aria-label="Filter Options" role="listbox">
         <h2>Filter Results</h2>
-        <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
+        <select role="option" aria-label="Select Neighborhoods" id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
           <option value="all">All Neighborhoods</option>
         </select>
-        <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()">
+        <select role="option" aria-label="Select Cuisines" id="cuisines-select" name="cuisines" onchange="updateRestaurants()">
           <option value="all">All Cuisines</option>
         </select>
       </div>
