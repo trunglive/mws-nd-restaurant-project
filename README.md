@@ -1,32 +1,92 @@
 # Mobile Web Specialist Certification Course
+
 ---
-#### _Three Stage Course Material Project - Restaurant Reviews_
 
-## Project Overview: Stage 1
+## Three Stage Course Material Project - Restaurant Reviews
 
-For the **Restaurant Reviews** projects, you will incrementally convert a static webpage to a mobile-ready web application. In **Stage One**, you will take a static design that lacks accessibility and convert the design to be responsive on different sized displays and accessible for screen reader use. You will also add a service worker to begin the process of creating a seamless offline experience for your users.
+### Description
 
-### Specification
+The original code for a restaurant reviews website is provided by [Udacity](https://www.udacity.com/course/mobile-web-specialist-nanodegree--nd024). The code can be found here: https://github.com/udacity/mws-restaurant-stage-1. The code has a lot of issues. It’s barely usable on a desktop browser, much less a mobile device. It also doesn’t include any standard accessibility features, and it doesn’t work offline at all.
 
-You have been provided the code for a restaurant reviews website. The code has a lot of issues. It’s barely usable on a desktop browser, much less a mobile device. It also doesn’t include any standard accessibility features, and it doesn’t work offline at all. Your job is to update the code to resolve these issues while still maintaining the included functionality. 
+### Goal
 
-### What do I do from here?
+The goal is to resolve the issues above and convert a static webpage to a mobile-ready web application with main focus on three areas: Progressive Web App, Performance, and Accessibility. These criteria will be evaluated based on [Lighthouse's audit](https://developers.google.com/web/tools/lighthouse/) from Google.
 
-1. In this folder, start up a simple HTTP server to serve up the site files on your local computer. Python has some simple tools to do this, and you don't even need to know Python. For most people, it's already installed on your computer. 
+### Project Overview
 
-In a terminal, check the version of Python you have: `python -V`. If you have Python 2.x, spin up the server with `python -m SimpleHTTPServer 8000` (or some other port, if port 8000 is already in use.) For Python 3.x, you can use `python3 -m http.server 8000`. If you don't have Python installed, navigate to Python's [website](https://www.python.org/) to download and install the software.
+The project will be incrementally enhanced after 3 stages:
 
-2. With your server running, visit the site: `http://localhost:8000`, and look around for a bit to see what the current experience looks like.
-3. Explore the provided code, and start making a plan to implement the required features in three areas: responsive design, accessibility and offline use.
-4. Write code to implement the updates to get this site on its way to being a mobile-ready website.
+- Stage 1:
+  - Take a static design that lacks accessibility and convert it to be responsive on different sized displays and accessible for screen reader use.
+  - Add a service worker to begin the process of creating a seamless offline experience for users.
+- Stage 2:
+  - Take the responsive, accessible design in Stage One and connect it to a provided [Node development server](https://github.com/udacity/mws-restaurant-stage-2). Use asynchronous JavaScript to request JSON data from the server.
+  - Store data received from the server in an offline database using IndexedDB, which will create an app shell architecture.
+  - Optimize the site to meet performance benchmarks from [Lighthouse](https://developers.google.com/web/tools/lighthouse/).
+- Stage 3:
+  - Take the connected application in Stage One and Stage Two and add additional functionality. Add a form to allow users to create their own reviews. If the app is offline, the form will defer updating to the remote database until a connection is established.
+  - Optimize the site to meet even stricter performance benchmarks than the previous project, and test again using [Lighthouse](https://developers.google.com/web/tools/lighthouse/). The goal is to score above 90 in Progressive Web App, Performance, and Accessibility.
 
-## Leaflet.js and Mapbox:
+### Prerequisites
 
-This repository uses [leafletjs](https://leafletjs.com/) with [Mapbox](https://www.mapbox.com/). You need to replace `<your MAPBOX API KEY HERE>` with a token from [Mapbox](https://www.mapbox.com/). Mapbox is free to use, and does not require any payment information. 
+In a terminal, check the version of Python you have: `python -V`. If you don't have Python installed, navigate to Python's [website](https://www.python.org/) to download and install the software.
+
+### Installation
+
+**Setup local server**
+
+Clone the provided code to create server
+
+```shell
+git clone https://github.com/udacity/mws-restaurant-stage-2.git
+```
+
+Install dependencies
+
+```shell
+npm install
+```
+
+Install Sails.js globally
+
+```shell
+npm i sails -g
+```
+
+Start the server
+
+```shell
+node server
+```
+
+**Setup project**
+
+```shell
+git clone https://github.com/trunglive/mws-nd-restaurant-project.git
+```
+
+For Python 2.x:
+
+```shell
+python -m SimpleHTTPServer 8000
+```
+
+For Python 3.x:
+
+```shell
+python3 -m http.server 8000
+```
+
+Visit the application at: `http://localhost:8000`.
+
+### Leaflet.js and Mapbox
+
+This repository uses [leafletjs](https://leafletjs.com/) with [Mapbox](https://www.mapbox.com/). My Mapbox API key is included in this project. Mapbox is free to use, and does not require any payment information.
 
 ### Note about ES6
 
-Most of the code in this project has been written to the ES6 JavaScript specification for compatibility with modern web browsers and future proofing JavaScript code. As much as possible, try to maintain use of ES6 in any additional JavaScript you write. 
+Most of the code in this project has been written to the ES6 JavaScript specification for compatibility with modern web browsers and future proofing JavaScript code.
 
+### License
 
-
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
