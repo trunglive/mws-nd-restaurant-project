@@ -345,8 +345,13 @@ nav #breadcrumb li a:hover {
   width: 100%;
 }
 
+/* #name-and-favorite {
+
+} */
+
 #restaurant-name {
-  margin: 15px 0 30px;
+  display: inline-block;
+  margin: 15px 20px 30px 0;
   font-family: Arial, sans-serif;
   font-size: 20pt;
   font-weight: 200;
@@ -354,6 +359,12 @@ nav #breadcrumb li a:hover {
   text-transform: uppercase;
   letter-spacing: 0;
   line-height: 1.1;
+  vertical-align: middle;
+}
+
+#restaurant-favorite-toggle-icon {
+  width: 30px;
+  height: 30px;
 }
 
 #restaurant-img {

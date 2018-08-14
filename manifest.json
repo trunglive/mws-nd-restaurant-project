@@ -1,7 +1,7 @@
 {
   "name": "Restaurant Reviews MWS",
   "short_name": "RR-MWS",
-  "theme_color": "#2196f3",
+  "theme_color": "#fff",
   "background_color": "#2196f3",
   "display": "standalone",
   "Scope": "/",

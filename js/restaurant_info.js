@@ -91,6 +91,45 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById("restaurant-name");
   name.innerHTML = restaurant.name;
 
+  const favoriteIcon = document.getElementById(
+    "restaurant-favorite-toggle-icon"
+  );
+
+  favoriteIcon.src = DBHelper.toggleFavoriteIconForRestaurant(restaurant);
+  favoriteIcon.alt = `${
+    restaurant.name
+  } Restaurant is ${DBHelper.favoriteStateOfRestaurant(restaurant)}`;
+
+  favoriteIcon.addEventListener("click", event => {
+    console.log("work");
+    event.stopPropagation();
+
+    const favoriteState = restaurant.is_favorite;
+    if (favoriteState.toString() === "true") {
+      fetch(
+        `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=true`,
+        // : `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
+        {
+          method: "PUT",
+          headers: new Headers({
+            "content-type": "application/json"
+          })
+        }
+      );
+    } else {
+      fetch(
+        `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
+        // : `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
+        {
+          method: "PUT",
+          headers: new Headers({
+            "content-type": "application/json"
+          })
+        }
+      );
+    }
+  });
+
   const address = document.getElementById("restaurant-address");
   address.innerHTML = restaurant.address;
 

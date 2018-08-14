@@ -25,7 +25,9 @@ The project will be incrementally enhanced after 3 stages:
 
 ### Prerequisites
 
-In a terminal, check the version of Python you have: `python -V`. If you don't have Python installed, navigate to Python's [website](https://www.python.org/) to download and install the software.
+- In a terminal, check the version of Python you have: `python -V`. If you don't have Python installed, navigate to Python's [website](https://www.python.org/) to download and install the software.
+
+- If you haven't installed Lighthouse plugin yet, head over to https://chrome.google.com/webstore/detail/lighthouse/blipmdconlkpinefehnmjammfjpmpbjk?hl=en and install it.
 
 ### Installation
 
@@ -82,8 +84,6 @@ Visit the application at `http://localhost:8000`.
 ### Running the tests
 
 The app was tested on Google Chrome Google Chrome Version 68.0.3440.106 (64-bit).
-
-If you haven't installed Lighthouse plugin yet, head over to https://chrome.google.com/webstore/detail/lighthouse/blipmdconlkpinefehnmjammfjpmpbjk?hl=en and install it.
 
 At `http://localhost:8000`, click _Generate report_ from Lighthouse to see the performance audits.
 

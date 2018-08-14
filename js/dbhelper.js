@@ -1,14 +1,70 @@
+// 2 fetch calls: 1 for restaurants, and 1 for reviews
+
+// Create a method to store restaurants
+// and reviews
+// similar to database structure
+
+// Create method to toggle favorite state
+// Step:
+// click heart icon
+// remove url first, whether it's favorite or unfavorite
+// add favorite/unfavorite icon url to DOM element
+// depending on the current state
+
+/**
+ * Create method to update favorite state in idb
+ * Then after updating local db
+ * fetch url with POST method to update remote database
+ */
+
+/**
+ * Create method to update reviews array in idb
+ * Then after updating reviews in local db
+ * fetch url wiht POST method to update remote database
+ */
+
 /**
  * Common database helper functions.
  */
 class DBHelper {
   /**
-   * Database URL.
+   * Get all restaurants
    */
-  static get DATABASE_URL() {
+  static get RESTAURANT_URL() {
     const port = 1337; // current server port
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}/restaurants/`;
   }
+
+  /**
+   * Get all reviews
+   */
+  static get REVIEW_URL() {
+    const port = 1337; // current server port
+    return `http://localhost:${port}/reviews/`;
+  }
+
+  /**
+   * Create IndexedDB database
+   */
+  static createDB() {
+    const dbPromise = idb.open("mws", 2, upgradeDB => {
+      switch (upgradeDB.oldVersion) {
+        case 0:
+          upgradeDB.createObjectStore("restaurants", {
+            keyPath: "id"
+          });
+        case 1:
+          upgradeDB.createObjectStore("reviews", {
+            keyPath: "id"
+          });
+      }
+    });
+  };
+
+  /**
+   * Fetch data from backend and cache it in IndexedDB
+   */
+  static fetch
 
   /**
    * Fetch all restaurants.
@@ -27,7 +83,7 @@ class DBHelper {
 
         // fetch from IndexedDB database
         idb
-          .open("mws", 1)
+          .open("mws", 0)
           .then(db => {
             const tx = db.transaction(["restaurants"], "readonly");
             const store = tx.objectStore("restaurants");
@@ -176,6 +232,24 @@ class DBHelper {
     return restaurant.photograph
       ? `/img/${restaurant.photograph}.jpg`
       : `/img/${restaurant.id}.jpg`;
+  }
+
+  /**
+   * Toggle favorite icon for restaurant.
+   */
+  static toggleFavoriteIconForRestaurant(restaurant) {
+    return restaurant.is_favorite.toString() === "true"
+      ? "/img/icons/favorite.png"
+      : "/img/icons/unfavorite.png";
+  }
+
+  /**
+   * Check whether the restaurant is favorite or not
+   */
+  static favoriteStateOfRestaurant(restaurant) {
+    return restaurant.is_favorite.toString() === "true"
+      ? "favorite"
+      : "unfavorite";
   }
 
   /**

@@ -9,5 +9,10 @@ if ("serviceWorker" in navigator) {
       .catch(error => {
         console.log("SW Registration failed!", error);
       });
+
+    navigator.serviceWorker.ready.then(registration => {
+      registration.sync.register("toggle-restaurant-favorite");
+      registration.sync.register("send-restaurant-review");
+    });
   });
 }
