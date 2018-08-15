@@ -2,7 +2,7 @@ importScripts("js/idb.js");
 importScripts("js/dbhelper.js");
 
 const cacheName = "mws-restaurant-project";
-const offlineUrl = ["index.html"];
+const offlineUrl = ["/index.html", "/restaurant.html"];
 const imageUrls = [
   "/img/restaurant-photos/1.jpg",
   "/img/restaurant-photos/2.jpg",
@@ -39,8 +39,8 @@ self.addEventListener("install", event => {
     "/js/idb.js",
     "/js/index.js",
     "/js/register.js",
-    // "/js/restaurant_info.js",
-    "./magic-ball.png",
+    "/js/restaurant_info.js",
+    "/magic-ball.png",
     "/manifest.json"
   ];
 
