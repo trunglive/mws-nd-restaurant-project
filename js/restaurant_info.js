@@ -85,39 +85,24 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   name.innerHTML = restaurant.name;
 
   const favoriteIcon = document.getElementById("favorite-toggle-icon");
+  console.log(DBHelper.favoriteState(restaurant).url, "current favorite image");
 
-  // favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
-  // favoriteIcon.alt = `${restaurant.name} Restaurant is ${
-  //   DBHelper.favoriteState(restaurant).state
-  // }`;
+  favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
+  favoriteIcon.alt = `${restaurant.name} Restaurant is ${
+    DBHelper.favoriteState(restaurant).state
+  }`;
 
   favoriteIcon.addEventListener("click", function() {
     if (DBHelper.favoriteState(restaurant).state === "favorite") {
       console.log("changing to unfavorite");
-      fetch(
-        `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
-        {
-          method: "PUT"
-        }
-      );
       DBHelper.cacheFavoriteState(restaurant, "false");
+      DBHelper.syncFavoriteStateWithBackend(restaurant, "false");
       favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
-      favoriteIcon.alt = `${restaurant.name} Restaurant is ${
-        DBHelper.favoriteState(restaurant).state
-      }`;
     } else {
       console.log("changing to favorite");
-      fetch(
-        `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=true`,
-        {
-          method: "PUT"
-        }
-      );
       DBHelper.cacheFavoriteState(restaurant, "true");
+      DBHelper.syncFavoriteStateWithBackend(restaurant, "true");
       favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
-      favoriteIcon.alt = `${restaurant.name} Restaurant is ${
-        DBHelper.favoriteState(restaurant).state
-      }`;
     }
   });
 
@@ -181,14 +166,15 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
     const reviewContent = {
       restaurant_id: restaurant.id,
       name,
-      rating: parseInt(rating),
-      comments,
       createdAt: new Date().getTime(),
-      updatedAt: new Date().getTime()
+      updatedAt: new Date().getTime(),
+      rating: parseInt(rating),
+      comments
     };
 
     console.log(reviewContent, "sent!");
     DBHelper.cacheReview(reviewContent);
+    DBHelper.syncReviewWithBackend(reviewContent);
     review.reset();
 
     submit.value = "SENT!";
@@ -227,7 +213,8 @@ createReviewHTML = review => {
   div.appendChild(name);
 
   const date = document.createElement("p");
-  date.innerHTML = review.date;
+  date.innerHTML = DBHelper.convertTimestamp(review.updatedAt);
+
   div.appendChild(date);
 
   const rating = document.createElement("p");

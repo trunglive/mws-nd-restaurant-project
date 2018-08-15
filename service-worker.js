@@ -3,19 +3,43 @@ importScripts("js/dbhelper.js");
 
 const cacheName = "mws-restaurant-project";
 const offlineUrl = ["index.html"];
+const imageUrls = [
+  "/img/restaurant-photos/1.jpg",
+  "/img/restaurant-photos/2.jpg",
+  "/img/restaurant-photos/3.jpg",
+  "/img/restaurant-photos/4.jpg",
+  "/img/restaurant-photos/5.jpg",
+  "/img/restaurant-photos/6.jpg",
+  "/img/restaurant-photos/7.jpg",
+  "/img/restaurant-photos/8.jpg",
+  "/img/restaurant-photos/9.jpg",
+  "/img/restaurant-photos/10.jpg",
+];
+const iconUrls = [
+  "/img/icons/favorite.png",
+  "/img/icons/unfavorite.png",
+  "/img/icons/icon-72x72.png",
+  "/img/icons/icon-96x96.png",
+  "/img/icons/icon-128x128.png",
+  "/img/icons/icon-144x144.png",
+  "/img/icons/icon-152x152.png",
+  "/img/icons/icon-192x192.png",
+  "/img/icons/icon-384x384.png",
+  "/img/icons/icon-512x512.png"
+]
 
 // add files to cache when installing service worker
 self.addEventListener("install", event => {
   const urlsToCache = [
     ...offlineUrl,
+    ...imageUrls,
+    ...iconUrls,
     "/css/styles.css",
-    "/img/icons",
-    "/img/restaurant-photos",
     "/js/dbhelper.js",
     "/js/idb.js",
     "/js/index.js",
     "/js/register.js",
-    "/js/restaurant_info.js",
+    // "/js/restaurant_info.js",
     "./magic-ball.png",
     "/manifest.json"
   ];
@@ -25,74 +49,10 @@ self.addEventListener("install", event => {
   );
 });
 
-// create function to store data in IndexedDB database for offline usage
-// const createDB = () => {
-//   const dbPromise = idb.open("mws", 2, upgradeDB => {
-//     switch (upgradeDB.oldVersion) {
-//       case 0:
-//         upgradeDB.createObjectStore("restaurants", {
-//           keyPath: "id"
-//         });
-//       case 1:
-//         upgradeDB.createObjectStore("reviews", {
-//           keyPath: "id"
-//         });
-//     }
-//   });
-
-//   fetch("http://localhost:1337/restaurants")
-//     .then(data => data.json())
-//     .then(restaurants => {
-//       dbPromise.then(db => {
-//         const tx = db.transaction("restaurants", "readwrite");
-//         const store = tx.objectStore("restaurants");
-
-//         restaurants.map(restaurant => {
-//           console.log("Adding restaurant: ", restaurant);
-//           return store.put(restaurant);
-//         });
-
-//         return tx.complete;
-//       });
-//     });
-// };
-
 // calling createDB to create IndexedDB database when service worker is activated
 self.addEventListener("activate", event => {
   event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
 });
-
-// Source: https://github.com/deanhume/progressive-web-apps-book/blob/master/chapter-4/WebP-Images/service-worker.js
-// Listen to fetch events
-// self.addEventListener('fetch', function(event) {
-
-//   // Check if the image is a jpeg or png
-//   if (/\.jpe?g$|.png$/.test(event.request.url)) {
-
-//     // Inspect the accept header for WebP support
-//     let supportsWebp = false;
-//     if (event.request.headers.has('accept')) {
-//       supportsWebp = event.request.headers
-//         .get('accept')
-//         .includes('webp');
-//     }
-
-//     // If the browser supports WebP
-//     if (supportsWebp) {
-//       // Clone the request
-//       const req = event.request.clone();
-
-//       // Build the return URL
-//       const returnUrl = req.url.substr(0, req.url.lastIndexOf(".")) + ".webp";
-
-//       event.respondWith(
-//         fetch(returnUrl, {
-//           mode: 'no-cors'
-//         })
-//       );
-//     }
-//   }
-// });
 
 // fetch data from service worker in offline mode
 self.addEventListener("fetch", event => {

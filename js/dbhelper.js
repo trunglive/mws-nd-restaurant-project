@@ -1,28 +1,3 @@
-// 2 fetch calls: 1 for restaurants, and 1 for reviews
-
-// Create a method to store restaurants
-// and reviews
-// similar to database structure
-
-// Create method to toggle favorite state
-// Step:
-// click heart icon
-// remove url first, whether it's favorite or unfavorite
-// add favorite/unfavorite icon url to DOM element
-// depending on the current state
-
-/**
- * Create method to update favorite state in idb
- * Then after updating local db
- * fetch url with POST method to update remote database
- */
-
-/**
- * Create method to update reviews array in idb
- * Then after updating reviews in local db
- * fetch url wiht POST method to update remote database
- */
-
 /**
  * Common database helper functions.
  */
@@ -329,15 +304,6 @@ class DBHelper {
   }
 
   /**
-   * Toggle favorite icon for restaurant.
-   */
-  // static toggleFavoriteState(restaurant) {
-  //   return restaurant.is_favorite.toString() === "true"
-  //     ? "/img/icons/favorite.png"
-  //     : "/img/icons/unfavorite.png";
-  // }
-
-  /**
    * Check whether the restaurant is favorite or not
    */
   static favoriteState(restaurant) {
@@ -361,14 +327,34 @@ class DBHelper {
     return DBHelper.createDB().then(db => {
       const tx = db.transaction("restaurants", "readwrite");
       const store = tx.objectStore("restaurants");
-      
-      store.get(restaurant.id).then(restaurant => {
+
+      return store.get(restaurant.id).then(restaurant => {
+        console.log(restaurant, "current restaurant in the store");
         restaurant.is_favorite = state;
         store.put(restaurant);
+        console.log("favorite state sent to idb");
+        return tx.complete;
       });
-      console.log("favorite state sent to idb");
-      return tx.complete;
     });
+  }
+
+  /**
+   * Send favorite state to backend database
+   */
+  static syncFavoriteStateWithBackend(restaurant, state) {
+    console.log("favorite state sent to backend");
+
+    return fetch(
+      `http://localhost:1337/restaurants/${
+        restaurant.id
+      }/?is_favorite=${state}`,
+      {
+        method: "PUT",
+        headers: new Headers({
+          "content-type": "application/json"
+        })
+      }
+    );
   }
 
   /**
@@ -381,7 +367,35 @@ class DBHelper {
       store.put(content);
       console.log("review content sent to idb");
       return tx.complete;
-    })
+    });
+  }
+
+  /**
+   * Send review to backend database
+   */
+  static syncReviewWithBackend(content) {
+    console.log("review content sent to backend");
+    return fetch(DBHelper.REVIEW_URL, {
+      method: "POST",
+      headers: new Headers({
+        "content-type": "application/json"
+      }),
+      body: JSON.stringify(content)
+    });
+  }
+
+  /**
+   * Convert unix timestamp to readable time format
+   */
+  static convertTimestamp(timestamp) {
+    const convertedFormat = new Date(timestamp);
+    const date = convertedFormat.getDate();
+    const month = convertedFormat.toLocaleString("en-us", {
+      month: "long"
+    });
+    const year = convertedFormat.getFullYear();
+    const result = `${month} ${date}, ${year}`;
+    return result;
   }
 
   /**
