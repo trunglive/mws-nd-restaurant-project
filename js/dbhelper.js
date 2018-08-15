@@ -134,59 +134,6 @@ class DBHelper {
   }
 
   /**
-   * Fetch all reviews
-   */
-  static fetchReviews(callback) {
-    // Replace XHR approach with fetch API
-    fetch(DBHelper.REVIEW_URL)
-      .then(data => data.json())
-      .then(reviews => {
-        console.log(reviews, "successfully fetched reviews from server");
-        callback(null, reviews);
-      })
-      .catch(error => {
-        console.log(error, "could not fetch reviews from server");
-        callback(error, null);
-
-        // fetch from IndexedDB database
-        idb
-          .open("mws", 1)
-          .then(db => {
-            const tx = db.transaction(["reviews"], "readonly");
-            const store = tx.objectStore("reviews");
-            return store.getAll();
-          })
-          .then(reviews => {
-            console.log("fetched reviews from IndexedDB instead");
-            callback(null, reviews);
-          });
-      });
-  }
-
-  /**
-   * Fetch reviews by restaurant's ID.
-   */
-  static fetchReviewsById(id, callback) {
-    // fetch all reviews with proper error handling.
-    DBHelper.fetchReviews((error, reviews) => {
-      if (error) {
-        callback(error, null);
-      } else {
-        const reviewsByEachRestaurant = reviews.filter(
-          r => r.restaurant_id == id
-        );
-        if (reviewsByEachRestaurant) {
-          // Got the restaurant
-          callback(null, reviewsByEachRestaurant);
-        } else {
-          // Restaurant does not exist in the database
-          callback("Restaurant does not exist", null);
-        }
-      }
-    });
-  }
-
-  /**
    * Fetch restaurants by a cuisine type with proper error handling.
    */
   static fetchRestaurantByCuisine(cuisine, callback) {
@@ -304,6 +251,86 @@ class DBHelper {
   }
 
   /**
+   * Fetch all reviews
+   */
+  static fetchReviews(callback) {
+    // Replace XHR approach with fetch API
+    fetch(DBHelper.REVIEW_URL)
+      .then(data => data.json())
+      .then(reviews => {
+        console.log(reviews, "successfully fetched reviews from server");
+        callback(null, reviews);
+      })
+      .catch(error => {
+        console.log(error, "could not fetch reviews from server");
+        callback(error, null);
+
+        // fetch from IndexedDB database
+        idb
+          .open("mws", 1)
+          .then(db => {
+            const tx = db.transaction(["reviews"], "readonly");
+            const store = tx.objectStore("reviews");
+            return store.getAll();
+          })
+          .then(reviews => {
+            console.log("fetched reviews from IndexedDB instead");
+            callback(null, reviews);
+          });
+      });
+  }
+
+  /**
+   * Fetch reviews by restaurant's ID.
+   */
+  static fetchReviewsById(id, callback) {
+    // fetch all reviews with proper error handling.
+    DBHelper.fetchReviews((error, reviews) => {
+      if (error) {
+        callback(error, null);
+      } else {
+        const reviewsByEachRestaurant = reviews.filter(
+          r => r.restaurant_id == id
+        );
+        if (reviewsByEachRestaurant) {
+          // Got the restaurant
+          callback(null, reviewsByEachRestaurant);
+        } else {
+          // Restaurant does not exist in the database
+          callback("Restaurant does not exist", null);
+        }
+      }
+    });
+  }
+
+  /**
+   * Cache review in IndexedDB database
+   */
+  static cacheReview(content) {
+    return DBHelper.createDB().then(db => {
+      const tx = db.transaction("reviews", "readwrite");
+      const store = tx.objectStore("reviews");
+      store.put(content);
+      console.log("review content sent to idb");
+      return tx.complete;
+    });
+  }
+
+  /**
+   * Send review to backend database
+   */
+  static syncReviewWithBackend(content) {
+    console.log("review content sent to backend");
+    return fetch(DBHelper.REVIEW_URL, {
+      method: "POST",
+      headers: new Headers({
+        "content-type": "application/json"
+      }),
+      body: JSON.stringify(content)
+    });
+  }
+
+  /**
    * Check whether the restaurant is favorite or not
    */
   static favoriteState(restaurant) {
@@ -355,33 +382,6 @@ class DBHelper {
         })
       }
     );
-  }
-
-  /**
-   * Cache review in IndexedDB database
-   */
-  static cacheReview(content) {
-    return DBHelper.createDB().then(db => {
-      const tx = db.transaction("reviews", "readwrite");
-      const store = tx.objectStore("reviews");
-      store.put(content);
-      console.log("review content sent to idb");
-      return tx.complete;
-    });
-  }
-
-  /**
-   * Send review to backend database
-   */
-  static syncReviewWithBackend(content) {
-    console.log("review content sent to backend");
-    return fetch(DBHelper.REVIEW_URL, {
-      method: "POST",
-      headers: new Headers({
-        "content-type": "application/json"
-      }),
-      body: JSON.stringify(content)
-    });
   }
 
   /**
