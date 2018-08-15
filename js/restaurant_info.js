@@ -41,22 +41,6 @@ initMap = () => {
   });
 };
 
-/* window.initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      });
-      fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-    }
-  });
-} */
-
 /**
  * Get current restaurant from page URL.
  */
@@ -72,14 +56,23 @@ fetchRestaurantFromURL = callback => {
     error = "No restaurant id in URL";
     callback(error, null);
   } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
+    DBHelper.fetchReviewsById(id, (error, reviews) => {
+      self.reviews = reviews;
+      console.log(self.reviews, "my review");
+      if (!reviews) {
         console.error(error);
-        return;
       }
-      fillRestaurantHTML();
-      callback(null, restaurant);
+
+      DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+        self.restaurant = restaurant;
+
+        if (!restaurant) {
+          console.error(error);
+          return;
+        }
+        fillRestaurantHTML();
+        callback(null, restaurant);
+      });
     });
   }
 };
@@ -91,42 +84,40 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById("restaurant-name");
   name.innerHTML = restaurant.name;
 
-  const favoriteIcon = document.getElementById(
-    "restaurant-favorite-toggle-icon"
-  );
+  const favoriteIcon = document.getElementById("favorite-toggle-icon");
 
-  favoriteIcon.src = DBHelper.toggleFavoriteIconForRestaurant(restaurant);
-  favoriteIcon.alt = `${
-    restaurant.name
-  } Restaurant is ${DBHelper.favoriteStateOfRestaurant(restaurant)}`;
+  // favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
+  // favoriteIcon.alt = `${restaurant.name} Restaurant is ${
+  //   DBHelper.favoriteState(restaurant).state
+  // }`;
 
-  favoriteIcon.addEventListener("click", event => {
-    console.log("work");
-    event.stopPropagation();
-
-    const favoriteState = restaurant.is_favorite;
-    if (favoriteState.toString() === "true") {
-      fetch(
-        `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=true`,
-        // : `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
-        {
-          method: "PUT",
-          headers: new Headers({
-            "content-type": "application/json"
-          })
-        }
-      );
-    } else {
+  favoriteIcon.addEventListener("click", function() {
+    if (DBHelper.favoriteState(restaurant).state === "favorite") {
+      console.log("changing to unfavorite");
       fetch(
         `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
-        // : `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=false`,
         {
-          method: "PUT",
-          headers: new Headers({
-            "content-type": "application/json"
-          })
+          method: "PUT"
         }
       );
+      DBHelper.cacheFavoriteState(restaurant, "false");
+      favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
+      favoriteIcon.alt = `${restaurant.name} Restaurant is ${
+        DBHelper.favoriteState(restaurant).state
+      }`;
+    } else {
+      console.log("changing to favorite");
+      fetch(
+        `http://localhost:1337/restaurants/${restaurant.id}/?is_favorite=true`,
+        {
+          method: "PUT"
+        }
+      );
+      DBHelper.cacheFavoriteState(restaurant, "true");
+      favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
+      favoriteIcon.alt = `${restaurant.name} Restaurant is ${
+        DBHelper.favoriteState(restaurant).state
+      }`;
     }
   });
 
@@ -176,7 +167,36 @@ fillRestaurantHoursHTML = (
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
+  const review = document.getElementById("add-review");
+  const submit = document.getElementById("submit-button");
+
+  review.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const rating = document.getElementById("rating").value;
+    const comments = document.getElementById("comment").value;
+
+    const reviewContent = {
+      restaurant_id: restaurant.id,
+      name,
+      rating: parseInt(rating),
+      comments,
+      createdAt: new Date().getTime(),
+      updatedAt: new Date().getTime()
+    };
+
+    console.log(reviewContent, "sent!");
+    DBHelper.cacheReview(reviewContent);
+    review.reset();
+
+    submit.value = "SENT!";
+    setTimeout(() => {
+      submit.value = "SUBMIT";
+    }, 3000);
+  });
+
   const container = document.getElementById("reviews-container");
   const title = document.createElement("h3");
   title.innerHTML = "Reviews";

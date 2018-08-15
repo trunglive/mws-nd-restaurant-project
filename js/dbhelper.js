@@ -47,7 +47,7 @@ class DBHelper {
    * Create IndexedDB database
    */
   static createDB() {
-    const dbPromise = idb.open("mws", 2, upgradeDB => {
+    return idb.open("mws", 2, upgradeDB => {
       switch (upgradeDB.oldVersion) {
         case 0:
           upgradeDB.createObjectStore("restaurants", {
@@ -55,30 +55,71 @@ class DBHelper {
           });
         case 1:
           upgradeDB.createObjectStore("reviews", {
-            keyPath: "id"
+            keyPath: "id",
+            autoIncrement: true
           });
       }
     });
-  };
+  }
 
   /**
-   * Fetch data from backend and cache it in IndexedDB
+   * Fetch restaurants from backend and cache it in IndexedDB
    */
-  static fetch
+  static cacheRestaurants() {
+    return fetch(DBHelper.RESTAURANT_URL)
+      .then(data => data.json())
+      .then(restaurants => {
+        return DBHelper.createDB().then(db => {
+          const tx = db.transaction("restaurants", "readwrite");
+          const store = tx.objectStore("restaurants");
+
+          restaurants.map(restaurant => {
+            console.log("Adding restaurant: ", restaurant);
+            return store.put(restaurant);
+          });
+
+          return tx.complete;
+        });
+      });
+  }
 
   /**
-   * Fetch all restaurants.
+   * Fetch reviews from backend and cache it in IndexedDB
+   */
+  static cacheReviews() {
+    return fetch(DBHelper.REVIEW_URL)
+      .then(data => data.json())
+      .then(reviews => {
+        return DBHelper.createDB().then(db => {
+          const tx = db.transaction("reviews", "readwrite");
+          const store = tx.objectStore("reviews");
+
+          reviews.map(review => {
+            console.log("Adding review: ", review);
+            return store.put(review);
+          });
+
+          return tx.complete;
+        });
+      });
+  }
+
+  /**
+   * Fetch all restaurants
    */
   static fetchRestaurants(callback) {
     // Replace XHR approach with fetch API
-    fetch(DBHelper.DATABASE_URL)
+    fetch(DBHelper.RESTAURANT_URL)
       .then(data => data.json())
       .then(restaurants => {
-        console.log(restaurants, "successfully fetched data from server");
+        console.log(
+          restaurants,
+          "successfully fetched restaurants from server"
+        );
         callback(null, restaurants);
       })
       .catch(error => {
-        console.log(error, "could not fetch data from server");
+        console.log(error, "could not fetch restaurants from server");
         callback(error, null);
 
         // fetch from IndexedDB database
@@ -90,7 +131,7 @@ class DBHelper {
             return store.getAll();
           })
           .then(restaurants => {
-            console.log("fetched data from IndexedDB instead");
+            console.log("fetched restaurants from IndexedDB instead");
             callback(null, restaurants);
           });
       });
@@ -109,6 +150,59 @@ class DBHelper {
         if (restaurant) {
           // Got the restaurant
           callback(null, restaurant);
+        } else {
+          // Restaurant does not exist in the database
+          callback("Restaurant does not exist", null);
+        }
+      }
+    });
+  }
+
+  /**
+   * Fetch all reviews
+   */
+  static fetchReviews(callback) {
+    // Replace XHR approach with fetch API
+    fetch(DBHelper.REVIEW_URL)
+      .then(data => data.json())
+      .then(reviews => {
+        console.log(reviews, "successfully fetched reviews from server");
+        callback(null, reviews);
+      })
+      .catch(error => {
+        console.log(error, "could not fetch reviews from server");
+        callback(error, null);
+
+        // fetch from IndexedDB database
+        idb
+          .open("mws", 1)
+          .then(db => {
+            const tx = db.transaction(["reviews"], "readonly");
+            const store = tx.objectStore("reviews");
+            return store.getAll();
+          })
+          .then(reviews => {
+            console.log("fetched reviews from IndexedDB instead");
+            callback(null, reviews);
+          });
+      });
+  }
+
+  /**
+   * Fetch reviews by restaurant's ID.
+   */
+  static fetchReviewsById(id, callback) {
+    // fetch all reviews with proper error handling.
+    DBHelper.fetchReviews((error, reviews) => {
+      if (error) {
+        callback(error, null);
+      } else {
+        const reviewsByEachRestaurant = reviews.filter(
+          r => r.restaurant_id == id
+        );
+        if (reviewsByEachRestaurant) {
+          // Got the restaurant
+          callback(null, reviewsByEachRestaurant);
         } else {
           // Restaurant does not exist in the database
           callback("Restaurant does not exist", null);
@@ -230,26 +324,64 @@ class DBHelper {
    */
   static imageUrlForRestaurant(restaurant) {
     return restaurant.photograph
-      ? `/img/${restaurant.photograph}.jpg`
-      : `/img/${restaurant.id}.jpg`;
+      ? `/img/restaurant-photos/${restaurant.photograph}.jpg`
+      : `/img/restaurant-photos/${restaurant.id}.jpg`;
   }
 
   /**
    * Toggle favorite icon for restaurant.
    */
-  static toggleFavoriteIconForRestaurant(restaurant) {
-    return restaurant.is_favorite.toString() === "true"
-      ? "/img/icons/favorite.png"
-      : "/img/icons/unfavorite.png";
-  }
+  // static toggleFavoriteState(restaurant) {
+  //   return restaurant.is_favorite.toString() === "true"
+  //     ? "/img/icons/favorite.png"
+  //     : "/img/icons/unfavorite.png";
+  // }
 
   /**
    * Check whether the restaurant is favorite or not
    */
-  static favoriteStateOfRestaurant(restaurant) {
-    return restaurant.is_favorite.toString() === "true"
-      ? "favorite"
-      : "unfavorite";
+  static favoriteState(restaurant) {
+    if (restaurant.is_favorite.toString() === "true") {
+      return {
+        url: "/img/icons/favorite.png",
+        state: "favorite"
+      };
+    } else {
+      return {
+        url: "/img/icons/unfavorite.png",
+        state: "unfavorite"
+      };
+    }
+  }
+
+  /**
+   * Cache favorite state in IndexedDB database
+   */
+  static cacheFavoriteState(restaurant, state) {
+    return DBHelper.createDB().then(db => {
+      const tx = db.transaction("restaurants", "readwrite");
+      const store = tx.objectStore("restaurants");
+      
+      store.get(restaurant.id).then(restaurant => {
+        restaurant.is_favorite = state;
+        store.put(restaurant);
+      });
+      console.log("favorite state sent to idb");
+      return tx.complete;
+    });
+  }
+
+  /**
+   * Cache review in IndexedDB database
+   */
+  static cacheReview(content) {
+    return DBHelper.createDB().then(db => {
+      const tx = db.transaction("reviews", "readwrite");
+      const store = tx.objectStore("reviews");
+      store.put(content);
+      console.log("review content sent to idb");
+      return tx.complete;
+    })
   }
 
   /**
@@ -268,14 +400,4 @@ class DBHelper {
     marker.addTo(newMap);
     return marker;
   }
-  /* static mapMarkerForRestaurant(restaurant, map) {
-    const marker = new google.maps.Marker({
-      position: restaurant.latlng,
-      title: restaurant.name,
-      url: DBHelper.urlForRestaurant(restaurant),
-      map: map,
-      animation: google.maps.Animation.DROP}
-    );
-    return marker;
-  } */
 }

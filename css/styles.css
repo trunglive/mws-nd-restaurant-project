@@ -362,7 +362,7 @@ nav #breadcrumb li a:hover {
   vertical-align: middle;
 }
 
-#restaurant-favorite-toggle-icon {
+#favorite-toggle-icon {
   width: 30px;
   height: 30px;
 }
@@ -401,6 +401,43 @@ nav #breadcrumb li a:hover {
 
 #reviews-container {
   margin: 50px 40px 80px;
+}
+
+#reviews-container .add-review {
+  margin-bottom: 60px;
+  padding: 20px;
+  background-color: #fff;
+  /* border: 1px solid red; */
+}
+
+#reviews-container .add-review > div {
+  margin: 20px 0;
+}
+
+#reviews-container .add-review label {
+  margin-right: 10px;
+}
+
+#reviews-container .add-review .comment {
+  display: flex;
+}
+
+#reviews-container .add-review .comment textarea {
+  width: 80%;
+}
+
+#reviews-container .add-review .submit-button input {
+  width: 80px;
+  margin: 0 20px;
+  padding: 5px;
+  font-size: 14px;
+  color: #fff;
+  border: none;
+  background-color: orange;
+}
+
+#reviews-container .add-review .submit-button {
+  margin: 0;
 }
 
 #reviews-container h2 {

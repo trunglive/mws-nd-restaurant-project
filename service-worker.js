@@ -1,18 +1,22 @@
 importScripts("js/idb.js");
+importScripts("js/dbhelper.js");
 
 const cacheName = "mws-restaurant-project";
-const offlineUrl = ["index.html", "restaurant.html"];
+const offlineUrl = ["index.html"];
 
 // add files to cache when installing service worker
 self.addEventListener("install", event => {
   const urlsToCache = [
     ...offlineUrl,
     "/css/styles.css",
+    "/img/icons",
+    "/img/restaurant-photos",
     "/js/dbhelper.js",
+    "/js/idb.js",
     "/js/index.js",
     "/js/register.js",
     "/js/restaurant_info.js",
-    "/img/",
+    "./magic-ball.png",
     "/manifest.json"
   ];
 
@@ -22,40 +26,40 @@ self.addEventListener("install", event => {
 });
 
 // create function to store data in IndexedDB database for offline usage
-const createDB = () => {
-  const dbPromise = idb.open("mws", 2, upgradeDB => {
-    switch (upgradeDB.oldVersion) {
-      case 0:
-        upgradeDB.createObjectStore("restaurants", {
-          keyPath: "id"
-        });
-      case 1:
-        upgradeDB.createObjectStore("reviews", {
-          keyPath: "id"
-        });
-    }
-  });
+// const createDB = () => {
+//   const dbPromise = idb.open("mws", 2, upgradeDB => {
+//     switch (upgradeDB.oldVersion) {
+//       case 0:
+//         upgradeDB.createObjectStore("restaurants", {
+//           keyPath: "id"
+//         });
+//       case 1:
+//         upgradeDB.createObjectStore("reviews", {
+//           keyPath: "id"
+//         });
+//     }
+//   });
 
-  fetch("http://localhost:1337/restaurants")
-    .then(data => data.json())
-    .then(restaurants => {
-      dbPromise.then(db => {
-        const tx = db.transaction("restaurants", "readwrite");
-        const store = tx.objectStore("restaurants");
+//   fetch("http://localhost:1337/restaurants")
+//     .then(data => data.json())
+//     .then(restaurants => {
+//       dbPromise.then(db => {
+//         const tx = db.transaction("restaurants", "readwrite");
+//         const store = tx.objectStore("restaurants");
 
-        restaurants.map(restaurant => {
-          console.log("Adding restaurant: ", restaurant);
-          return store.put(restaurant);
-        });
+//         restaurants.map(restaurant => {
+//           console.log("Adding restaurant: ", restaurant);
+//           return store.put(restaurant);
+//         });
 
-        return tx.complete;
-      });
-    });
-};
+//         return tx.complete;
+//       });
+//     });
+// };
 
 // calling createDB to create IndexedDB database when service worker is activated
 self.addEventListener("activate", event => {
-  event.waitUntil(createDB());
+  event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
 });
 
 // Source: https://github.com/deanhume/progressive-web-apps-book/blob/master/chapter-4/WebP-Images/service-worker.js
@@ -112,14 +116,14 @@ self.addEventListener("fetch", event => {
           const responseToCache = response.clone();
 
           caches.open(cacheName).then(cache => {
-            cache.put(event.request, responseToCache);
+            cache.put(event.request.url, responseToCache);
           });
 
           return response;
         })
         .catch(error => {
           if (
-            event.request.method === "GET" &&
+            event.request.method === 'GET' &&
             event.request.headers.get("accept").includes("text/html")
           ) {
             return caches.match(offlineUrl);
@@ -130,33 +134,33 @@ self.addEventListener("fetch", event => {
 });
 
 // synchronize data to database when connection is back
-self.addEventListener("sync", event => {
-  if (event.tag === "send-restaurant-review") {
-    event.waitUntil(
-      idb
-        .open("mws", 1)
-        .then(db => {
-          const tx = db.transaction(["restaurants"], "readonly");
-          const store = tx.objectStore("restaurants");
-          const index = store.index("name");
-          return index.get(key);
-        })
-        .then(restaurant => {
-          console.log(restaurant, "yayyyy");
-          console.log("the comment is being saved to the server...");
-          fetch("http://localhost:1337/reviews/", {
-            method: "POST",
-            headers: new Headers({
-              "content-type": "application/json"
-            }),
-            body: JSON.stringify({
-              restaurant_id: restaurant.id,
-              name: restaurant.name,
-              rating: "find a way to retrieve rating",
-              comments: "find a way to retrieve comments"
-            })
-          });
-        })
-    );
-  }
-});
+// self.addEventListener("sync", event => {
+//   if (event.tag === "send-restaurant-review") {
+//     event.waitUntil(
+//       idb
+//         .open("mws", 1)
+//         .then(db => {
+//           const tx = db.transaction(["restaurants"], "readonly");
+//           const store = tx.objectStore("restaurants");
+//           const index = store.index("name");
+//           return index.get(key);
+//         })
+//         .then(restaurant => {
+//           console.log(restaurant, "yayyyy");
+//           console.log("the comment is being saved to the server...");
+//           fetch("http://localhost:1337/reviews/", {
+//             method: "POST",
+//             headers: new Headers({
+//               "content-type": "application/json"
+//             }),
+//             body: JSON.stringify({
+//               restaurant_id: restaurant.id,
+//               name: restaurant.name,
+//               rating: "find a way to retrieve rating",
+//               comments: "find a way to retrieve comments"
+//             })
+//           });
+//         })
+//     );
+//   }
+// });
