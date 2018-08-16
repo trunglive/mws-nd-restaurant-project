@@ -1,7 +1,7 @@
 importScripts("js/idb.js");
 importScripts("js/dbhelper.js");
 
-const cacheName = "mws-restaurant-project";
+const currentCache = "mws-restaurant-project-v1";
 const offlineUrl = ["/index.html", "/restaurant.html"];
 const imageUrls = [
   "/img/restaurant-photos/1.jpg",
@@ -13,7 +13,7 @@ const imageUrls = [
   "/img/restaurant-photos/7.jpg",
   "/img/restaurant-photos/8.jpg",
   "/img/restaurant-photos/9.jpg",
-  "/img/restaurant-photos/10.jpg",
+  "/img/restaurant-photos/10.jpg"
 ];
 const iconUrls = [
   "/img/icons/favorite.png",
@@ -26,11 +26,12 @@ const iconUrls = [
   "/img/icons/icon-192x192.png",
   "/img/icons/icon-384x384.png",
   "/img/icons/icon-512x512.png"
-]
+];
 
 // add files to cache when installing service worker
 self.addEventListener("install", event => {
   const urlsToCache = [
+    "/",
     ...offlineUrl,
     ...imageUrls,
     ...iconUrls,
@@ -44,13 +45,33 @@ self.addEventListener("install", event => {
     "/manifest.json"
   ];
 
+  console.log("Service Worker installed", event);
   event.waitUntil(
-    caches.open(cacheName).then(cache => cache.addAll(urlsToCache))
+    caches.open(currentCache).then(cache => cache.addAll(urlsToCache))
   );
 });
 
 // calling createDB to create IndexedDB database when service worker is activated
 self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      // Delete all other versions of the 'mws-restaurant' cache except for the current one
+      return Promise.all(
+        cacheNames
+          .filter(cacheName => {
+            return (
+              cacheName.startsWith("mws-restaurant-project") &&
+              currentCache != cacheName
+            );
+          })
+          .map(cacheName => {
+            return caches.delete(cacheName);
+          })
+      );
+    })
+  );
+
+  console.log("Service Worker activated", event);
   event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
 });
 
@@ -75,7 +96,7 @@ self.addEventListener("fetch", event => {
 
           const responseToCache = response.clone();
 
-          caches.open(cacheName).then(cache => {
+          caches.open(currentCache).then(cache => {
             cache.put(event.request.url, responseToCache);
           });
 
@@ -83,7 +104,7 @@ self.addEventListener("fetch", event => {
         })
         .catch(error => {
           if (
-            event.request.method === 'GET' &&
+            event.request.method === "GET" &&
             event.request.headers.get("accept").includes("text/html")
           ) {
             return caches.match(offlineUrl);
@@ -94,33 +115,24 @@ self.addEventListener("fetch", event => {
 });
 
 // synchronize data to database when connection is back
-// self.addEventListener("sync", event => {
-//   if (event.tag === "send-restaurant-review") {
-//     event.waitUntil(
-//       idb
-//         .open("mws", 1)
-//         .then(db => {
-//           const tx = db.transaction(["restaurants"], "readonly");
-//           const store = tx.objectStore("restaurants");
-//           const index = store.index("name");
-//           return index.get(key);
-//         })
-//         .then(restaurant => {
-//           console.log(restaurant, "yayyyy");
-//           console.log("the comment is being saved to the server...");
-//           fetch("http://localhost:1337/reviews/", {
-//             method: "POST",
-//             headers: new Headers({
-//               "content-type": "application/json"
-//             }),
-//             body: JSON.stringify({
-//               restaurant_id: restaurant.id,
-//               name: restaurant.name,
-//               rating: "find a way to retrieve rating",
-//               comments: "find a way to retrieve comments"
-//             })
-//           });
-//         })
-//     );
-//   }
-// });
+self.addEventListener("sync", event => {
+  if (event.tag === "send-review") {
+    event.waitUntil(
+      DBHelper.createDB()
+        .then(db => {
+          const tx = db.transaction(["reviews"], "readonly");
+          const store = tx.objectStore("reviews");
+          return store.getAll();
+        })
+        .then(reviews => {
+          return reviews
+            .filter(review => (review.reviewState === "pending"))
+            .map(pendingReview => {
+              // create finalReview object without property reviewState
+              const { reviewState, ...finalReview } = pendingReview;
+              DBHelper.addNewReviewToBackend(finalReview);
+            });
+        })
+    );
+  }
+});

@@ -1,9 +1,9 @@
 /**
- * Common database helper functions.
+ * Common database helper functions
  */
 class DBHelper {
   /**
-   * Get all restaurants
+   * Endpoint for geting all restaurants
    */
   static get RESTAURANT_URL() {
     const port = 1337; // current server port
@@ -11,7 +11,7 @@ class DBHelper {
   }
 
   /**
-   * Get all reviews
+   * Endpoint for getting all reviews
    */
   static get REVIEW_URL() {
     const port = 1337; // current server port
@@ -22,7 +22,7 @@ class DBHelper {
    * Create IndexedDB database
    */
   static createDB() {
-    return idb.open("mws", 2, upgradeDB => {
+    return idb.open("mws", 3, upgradeDB => {
       switch (upgradeDB.oldVersion) {
         case 0:
           upgradeDB.createObjectStore("restaurants", {
@@ -38,7 +38,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch restaurants from backend and cache it in IndexedDB
+   * Fetch restaurants from backend and cache them in IndexedDB
    */
   static cacheRestaurants() {
     return fetch(DBHelper.RESTAURANT_URL)
@@ -49,7 +49,7 @@ class DBHelper {
           const store = tx.objectStore("restaurants");
 
           restaurants.map(restaurant => {
-            console.log("Adding restaurant: ", restaurant);
+            console.log("Adding restaurant: ", restaurant, " to idb");
             return store.put(restaurant);
           });
 
@@ -59,7 +59,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch reviews from backend and cache it in IndexedDB
+   * Fetch reviews from backend and cache them in IndexedDB
    */
   static cacheReviews() {
     return fetch(DBHelper.REVIEW_URL)
@@ -70,7 +70,7 @@ class DBHelper {
           const store = tx.objectStore("reviews");
 
           reviews.map(review => {
-            console.log("Adding review: ", review);
+            console.log("Adding review: ", review, " to idb");
             return store.put(review);
           });
 
@@ -80,21 +80,19 @@ class DBHelper {
   }
 
   /**
-   * Fetch all restaurants
+   * Fetch all restaurants from server
+   * In case of network failure, fetch from IndexedDB
    */
   static fetchRestaurants(callback) {
     // Replace XHR approach with fetch API
     fetch(DBHelper.RESTAURANT_URL)
       .then(data => data.json())
       .then(restaurants => {
-        console.log(
-          restaurants,
-          "successfully fetched restaurants from server"
-        );
+        console.log(restaurants, "ONLINE, fetched restaurants from backend");
         callback(null, restaurants);
       })
       .catch(error => {
-        console.log(error, "could not fetch restaurants from server");
+        console.log(error, "OFFLINE, could not fetch restaurants from backend");
         callback(error, null);
 
         // fetch from IndexedDB database
@@ -113,7 +111,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch a restaurant by its ID.
+   * Fetch a restaurant by its ID
    */
   static fetchRestaurantById(id, callback) {
     // fetch all restaurants with proper error handling.
@@ -134,7 +132,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch restaurants by a cuisine type with proper error handling.
+   * Fetch restaurants by a cuisine type with proper error handling
    */
   static fetchRestaurantByCuisine(cuisine, callback) {
     // Fetch all restaurants  with proper error handling
@@ -150,7 +148,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch restaurants by a neighborhood with proper error handling.
+   * Fetch restaurants by a neighborhood with proper error handling
    */
   static fetchRestaurantByNeighborhood(neighborhood, callback) {
     // Fetch all restaurants
@@ -166,7 +164,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
+   * Fetch restaurants by a cuisine and a neighborhood with proper error handling
    */
   static fetchRestaurantByCuisineAndNeighborhood(
     cuisine,
@@ -193,7 +191,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch all neighborhoods with proper error handling.
+   * Fetch all neighborhoods with proper error handling
    */
   static fetchNeighborhoods(callback) {
     // Fetch all restaurants
@@ -215,7 +213,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch all cuisines with proper error handling.
+   * Fetch all cuisines with proper error handling
    */
   static fetchCuisines(callback) {
     // Fetch all restaurants
@@ -235,14 +233,14 @@ class DBHelper {
   }
 
   /**
-   * Restaurant page URL.
+   * Restaurant page URL
    */
   static urlForRestaurant(restaurant) {
     return `./restaurant.html?id=${restaurant.id}`;
   }
 
   /**
-   * Restaurant image URL.
+   * Restaurant image URL
    */
   static imageUrlForRestaurant(restaurant) {
     return restaurant.photograph
@@ -251,18 +249,19 @@ class DBHelper {
   }
 
   /**
-   * Fetch all reviews
+   * Fetch all reviews from server
+   * In case of network failure, fetch from IndexedDB
    */
   static fetchReviews(callback) {
     // Replace XHR approach with fetch API
     fetch(DBHelper.REVIEW_URL)
       .then(data => data.json())
       .then(reviews => {
-        console.log(reviews, "successfully fetched reviews from server");
+        console.log(reviews, "ONLINE, fetched reviews from backend");
         callback(null, reviews);
       })
       .catch(error => {
-        console.log(error, "could not fetch reviews from server");
+        console.log(error, "OFFLINE, could not fetch reviews from backend");
         callback(error, null);
 
         // fetch from IndexedDB database
@@ -281,7 +280,7 @@ class DBHelper {
   }
 
   /**
-   * Fetch reviews by restaurant's ID.
+   * Fetch reviews by restaurant's ID
    */
   static fetchReviewsById(id, callback) {
     // fetch all reviews with proper error handling.
@@ -304,27 +303,27 @@ class DBHelper {
   }
 
   /**
-   * Cache review in IndexedDB database
+   * Cache new review in IndexedDB database
    */
-  static cacheReview(content) {
+  static addNewReviewToCache(content) {
     return DBHelper.createDB().then(db => {
       const tx = db.transaction("reviews", "readwrite");
       const store = tx.objectStore("reviews");
       store.put(content);
-      console.log("review content sent to idb");
+      console.log("review sent to idb");
       return tx.complete;
     });
   }
 
   /**
-   * Send review to backend database
+   * Send new review to backend database
    */
-  static syncReviewWithBackend(content) {
-    console.log("review content sent to backend");
+  static addNewReviewToBackend(content) {
+    console.log("review sent to backend");
     return fetch(DBHelper.REVIEW_URL, {
       method: "POST",
       headers: new Headers({
-        "content-type": "application/json"
+        "Content-Type": "application/json"
       }),
       body: JSON.stringify(content)
     });
@@ -368,7 +367,7 @@ class DBHelper {
   /**
    * Send favorite state to backend database
    */
-  static syncFavoriteStateWithBackend(restaurant, state) {
+  static addFavoriteStateToBackend(restaurant, state) {
     console.log("favorite state sent to backend");
 
     return fetch(
@@ -378,7 +377,7 @@ class DBHelper {
       {
         method: "PUT",
         headers: new Headers({
-          "content-type": "application/json"
+          "Content-Type": "application/json"
         })
       }
     );
@@ -399,7 +398,7 @@ class DBHelper {
   }
 
   /**
-   * Map marker for a restaurant.
+   * Map marker for a restaurant
    */
   static mapMarkerForRestaurant(restaurant, map) {
     // https://leafletjs.com/reference-1.3.0.html#marker

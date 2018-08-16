@@ -6,6 +6,9 @@ var newMap;
  */
 document.addEventListener("DOMContentLoaded", event => {
   initMap();
+  // DBHelper.cacheRestaurants();
+  // DBHelper.cacheReviews();
+  console.log("DOM loaded!");
 });
 
 /**
@@ -58,7 +61,7 @@ fetchRestaurantFromURL = callback => {
   } else {
     DBHelper.fetchReviewsById(id, (error, reviews) => {
       self.reviews = reviews;
-      console.log(self.reviews, "my review");
+      console.log(self.reviews, "reviews for this restaurant");
       if (!reviews) {
         console.error(error);
       }
@@ -85,7 +88,10 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   name.innerHTML = restaurant.name;
 
   const favoriteIcon = document.getElementById("favorite-toggle-icon");
-  console.log(DBHelper.favoriteState(restaurant).url, "current favorite image");
+  console.log(
+    "current icon for favorite state",
+    DBHelper.favoriteState(restaurant).url
+  );
 
   favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
   favoriteIcon.alt = `${restaurant.name} Restaurant is ${
@@ -93,17 +99,20 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   }`;
 
   favoriteIcon.addEventListener("click", function() {
-    if (DBHelper.favoriteState(restaurant).state === "favorite") {
-      console.log("changing to unfavorite");
+    favoriteIcon.src =
+      restaurant.is_favorite.toString() === "true"
+        ? "/img/icons/unfavorite.png"
+        : "/img/icons/favorite.png";
+
+    if (restaurant.is_favorite.toString() === "true") {
       DBHelper.cacheFavoriteState(restaurant, "false");
-      DBHelper.syncFavoriteStateWithBackend(restaurant, "false");
-      favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
+      DBHelper.addFavoriteStateToBackend(restaurant, "false");
     } else {
-      console.log("changing to favorite");
       DBHelper.cacheFavoriteState(restaurant, "true");
-      DBHelper.syncFavoriteStateWithBackend(restaurant, "true");
-      favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
+      DBHelper.addFavoriteStateToBackend(restaurant, "true");
     }
+
+    // window.location.reload();
   });
 
   const address = document.getElementById("restaurant-address");
@@ -169,15 +178,22 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
       createdAt: new Date().getTime(),
       updatedAt: new Date().getTime(),
       rating: parseInt(rating),
-      comments
+      comments,
+      reviewState: "pending"
     };
 
-    console.log(reviewContent, "sent!");
-    DBHelper.cacheReview(reviewContent);
-    DBHelper.syncReviewWithBackend(reviewContent);
-    review.reset();
+    DBHelper.addNewReviewToCache(reviewContent);
 
+    navigator.serviceWorker.ready.then(sw => {
+      console.log("sync event is ready in browser!");
+      return sw.sync.register("send-review");
+    });
+
+    // DBHelper.addNewReviewToBackend(reviewContent);
+
+    review.reset();
     submit.value = "SENT!";
+
     setTimeout(() => {
       submit.value = "SUBMIT";
     }, 3000);
