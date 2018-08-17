@@ -195,7 +195,7 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
     if (navigator.onLine) {
       review.reset();
       setTimeout(() => {
-        // window.location.reload();
+        window.location.reload();
       }, 2000);
     } else {
       console.log("network error!");
