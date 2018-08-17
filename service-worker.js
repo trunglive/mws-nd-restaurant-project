@@ -101,7 +101,7 @@ self.addEventListener("fetch", event => {
           }
 
           return response;
-        })
+        });
         // .catch(error => {
         //   if (
         //     event.request.method === "GET" &&
