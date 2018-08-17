@@ -5,6 +5,8 @@ var newMap;
  * Initialize map as soon as the page is loaded.
  */
 document.addEventListener("DOMContentLoaded", event => {
+  DBHelper.cacheRestaurants();
+  DBHelper.cacheReviews();
   initMap();
   console.log("DOM loaded!");
 });
@@ -183,17 +185,25 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
 
     DBHelper.addNewReviewToCache(reviewContent);
 
-    navigator.serviceWorker.ready.then(sw => {
-      console.log("sync event is ready in browser!");
-      return sw.sync.register("send-review");
-    });
+    // Check the browser support of Background Sync
+    // https://jakearchibald.github.io/isserviceworkerready
+    // https://caniuse.com/#search=background%20sync
+    if ("serviceWorker" in navigator && "SyncManager" in window) {
+      navigator.serviceWorker.ready
+        .then(sw => {
+          console.log("sync event is ready in browser!");
+          return sw.sync.register("send-review");
+        })
+        .catch(e => console.log(e, "could not register sync event"));
+    } else {
+      console.log("background sync is not supported by this browser yet");
+    }
 
     // DBHelper.addNewReviewToBackend(reviewContent);
 
     submit.value = "SENDING...";
 
     if (navigator.onLine) {
-      review.reset();
       setTimeout(() => {
         window.location.reload();
       }, 2000);

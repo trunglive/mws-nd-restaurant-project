@@ -22,7 +22,7 @@ class DBHelper {
    * Create IndexedDB database
    */
   static createDB() {
-    return idb.open("mws", 3, upgradeDB => {
+    return idb.open("mws", 2, upgradeDB => {
       switch (upgradeDB.oldVersion) {
         case 0:
           upgradeDB.createObjectStore("restaurants", {
@@ -99,7 +99,7 @@ class DBHelper {
         idb
           .open("mws", 0)
           .then(db => {
-            const tx = db.transaction(["restaurants"], "readonly");
+            const tx = db.transaction("restaurants", "readonly");
             const store = tx.objectStore("restaurants");
             return store.getAll();
           })
@@ -268,7 +268,7 @@ class DBHelper {
         idb
           .open("mws", 1)
           .then(db => {
-            const tx = db.transaction(["reviews"], "readonly");
+            const tx = db.transaction("reviews", "readonly");
             const store = tx.objectStore("reviews");
             return store.getAll();
           })

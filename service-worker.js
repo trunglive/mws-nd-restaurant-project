@@ -2,7 +2,9 @@ importScripts("js/idb.js");
 importScripts("js/dbhelper.js");
 
 const currentCache = "mws-restaurant-project-v1";
-const offlineUrl = ["/index.html", "/restaurant.html"];
+
+const offlineUrls = ["/index.html", "/restaurant.html"];
+
 const imageUrls = [
   "/img/restaurant-photos/1.jpg",
   "/img/restaurant-photos/2.jpg",
@@ -32,7 +34,7 @@ const iconUrls = [
 self.addEventListener("install", event => {
   const urlsToCache = [
     "/",
-    ...offlineUrl,
+    ...offlineUrls,
     ...imageUrls,
     ...iconUrls,
     "/css/styles.css",
@@ -72,12 +74,13 @@ self.addEventListener("activate", event => {
   );
 
   // cache restaurants and reviews in IndexedDB database
-  event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
+  // event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
   console.log("Service Worker activated", event);
 });
 
 // fetch data from service worker in offline mode
 self.addEventListener("fetch", event => {
+  console.log(event.request, "event request object");
   event.respondWith(
     caches.open(currentCache).then(cache => {
       // check to see whether the request exists in the cache or not
@@ -90,26 +93,33 @@ self.addEventListener("fetch", event => {
         // in the case of failed fetch, fall back to cached offline source
         const fetchRequest = event.request.clone();
 
-        return fetch(fetchRequest).then(response => {
-          // if (!response || response.status !== 200) {
-          //   return response;
-          // }
+        return fetch(fetchRequest)
+          .then(response => {
+            if (!response || response.status !== 200) {
+              return response;
+            } else {
+              const responseToCache = response.clone();
+              if (
+                !event.request.url.includes("/restaurants/") &&
+                !event.request.url.includes("/reviews/")
+              ) {
+                console.log(event.request.url, "this event request is cached");
+                cache.put(event.request.url, responseToCache);
+              } else {
+                console.log("this event request is not cached");
+              }
 
-          const responseToCache = response.clone();
-          if (event.request.url.includes("restaurant.html")) {
-            cache.put(event.request.url, responseToCache);
-          }
-
-          return response;
-        });
-        // .catch(error => {
-        //   if (
-        //     event.request.method === "GET" &&
-        //     event.request.headers.get("accept").includes("text/html")
-        //   ) {
-        //     return caches.match(offlineUrl);
-        //   }
-        // });
+              return response;
+            }
+          })
+          .catch(error => {
+            if (
+              event.request.method === "GET" &&
+              event.request.headers.get("accept").includes("text/html")
+            ) {
+              return caches.match(offlineUrls);
+            }
+          });
       });
     })
   );
