@@ -6,8 +6,6 @@ var newMap;
  */
 document.addEventListener("DOMContentLoaded", event => {
   initMap();
-  // DBHelper.cacheRestaurants();
-  // DBHelper.cacheReviews();
   console.log("DOM loaded!");
 });
 
@@ -112,7 +110,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
       DBHelper.addFavoriteStateToBackend(restaurant, "true");
     }
 
-    // window.location.reload();
+    window.location.reload();
   });
 
   const address = document.getElementById("restaurant-address");
@@ -171,6 +169,7 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
     const name = document.getElementById("name").value;
     const rating = document.getElementById("rating").value;
     const comments = document.getElementById("comment").value;
+    const notification = document.getElementById("submit-notification");
 
     const reviewContent = {
       restaurant_id: restaurant.id,
@@ -191,12 +190,19 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
 
     // DBHelper.addNewReviewToBackend(reviewContent);
 
-    review.reset();
-    submit.value = "SENT!";
+    submit.value = "SENDING...";
 
-    setTimeout(() => {
-      submit.value = "SUBMIT";
-    }, 3000);
+    if (navigator.onLine) {
+      review.reset();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      console.log("network error!");
+      notification.innerHTML =
+        "Network error! Your review will be automatically updated once the connection is re-established";
+    }
   });
 
   const container = document.getElementById("reviews-container");

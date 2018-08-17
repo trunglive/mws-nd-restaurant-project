@@ -51,11 +51,11 @@ self.addEventListener("install", event => {
   );
 });
 
-// calling createDB to create IndexedDB database when service worker is activated
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
-      // Delete all other versions of the 'mws-restaurant' cache except for the current one
+      // delete all old cache versions of the 'mws-restaurant-project'
+      // and keep the current version
       return Promise.all(
         cacheNames
           .filter(cacheName => {
@@ -71,45 +71,46 @@ self.addEventListener("activate", event => {
     })
   );
 
-  console.log("Service Worker activated", event);
+  // cache restaurants and reviews in IndexedDB database
   event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
+  console.log("Service Worker activated", event);
 });
 
 // fetch data from service worker in offline mode
 self.addEventListener("fetch", event => {
   event.respondWith(
-    // check to see whether the request exists in the cache or not
-    caches.match(event.request).then(response => {
-      if (response) {
-        return response;
-      }
+    caches.open(currentCache).then(cache => {
+      // check to see whether the request exists in the cache or not
+      return cache.match(event.request).then(response => {
+        if (response) {
+          return response;
+        }
 
-      // if it doesn't exist, add response into the cache
-      // in the case of failed fetch, fall back to cached offline source
-      const fetchRequest = event.request.clone();
+        // if it doesn't exist, add response into the cache
+        // in the case of failed fetch, fall back to cached offline source
+        const fetchRequest = event.request.clone();
 
-      return fetch(fetchRequest)
-        .then(response => {
-          if (!response || response.status !== 200) {
-            return response;
-          }
+        return fetch(fetchRequest).then(response => {
+          // if (!response || response.status !== 200) {
+          //   return response;
+          // }
 
           const responseToCache = response.clone();
-
-          caches.open(currentCache).then(cache => {
+          if (event.request.url.includes("restaurant.html")) {
             cache.put(event.request.url, responseToCache);
-          });
+          }
 
           return response;
         })
-        .catch(error => {
-          if (
-            event.request.method === "GET" &&
-            event.request.headers.get("accept").includes("text/html")
-          ) {
-            return caches.match(offlineUrl);
-          }
-        });
+        // .catch(error => {
+        //   if (
+        //     event.request.method === "GET" &&
+        //     event.request.headers.get("accept").includes("text/html")
+        //   ) {
+        //     return caches.match(offlineUrl);
+        //   }
+        // });
+      });
     })
   );
 });
@@ -126,7 +127,7 @@ self.addEventListener("sync", event => {
         })
         .then(reviews => {
           return reviews
-            .filter(review => (review.reviewState === "pending"))
+            .filter(review => review.reviewState === "pending")
             .map(pendingReview => {
               // create finalReview object without property reviewState
               const { reviewState, ...finalReview } = pendingReview;

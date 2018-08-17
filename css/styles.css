@@ -440,6 +440,11 @@ nav #breadcrumb li a:hover {
   margin: 0;
 }
 
+#submit-notification {
+  margin-top: 20px;
+  color: red;
+}
+
 #reviews-container h2 {
   padding-bottom: 1pt;
   font-size: 24pt;
