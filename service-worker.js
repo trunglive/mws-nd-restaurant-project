@@ -130,8 +130,8 @@ self.addEventListener("fetch", event => {
 
 // synchronize data to database when connection is back
 // by using Background Sync feature
-self.addEventListener("sync", event => {
-  if (event.tag === "send-review") {
-    event.waitUntil(DBHelper.addPendingReviewToBackend());
-  }
-});
+// self.addEventListener("sync", event => {
+//   if (event.tag === "send-review") {
+//     event.waitUntil(DBHelper.addPendingReviewToBackend());
+//   }
+// });

@@ -63,7 +63,6 @@ fetchRestaurantFromURL = callback => {
       if (!reviews) {
         console.error(error);
       }
-
       DBHelper.fetchRestaurantById(id, (error, restaurant) => {
         self.restaurant = restaurant;
 
@@ -155,10 +154,10 @@ fillRestaurantHoursHTML = (
  * Create all reviews HTML and add them to the webpage.
  */
 fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
-  const review = document.getElementById("add-review");
+  const reviewForm = document.getElementById("review-form");
   const submit = document.getElementById("submit-button");
 
-  review.addEventListener("submit", event => {
+  reviewForm.addEventListener("submit", event => {
     event.preventDefault();
 
     const name = document.getElementById("name").value;
@@ -183,8 +182,7 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
       submit.value = "SENDING...";
 
       setTimeout(() => {
-        
-        review.reset();
+        reviewForm.reset();
         window.location.reload();
       }, 2000);
     } else {
@@ -198,29 +196,34 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
       notification.innerHTML =
         "Network error! Your review will be automatically updated once the connection is re-established. Please check back later.";
 
+      DBHelper.syncReviewWhenOnline();
+
+      // ---------------------------------
       // Experiment with Background Sync to defer data until the connection is stable,
       // even when tab or browser is closed
       // Register send-review tag and let "sync" event do the deferred work in service worker
       // Check the browser support of Background Sync
       // https://jakearchibald.github.io/isserviceworkerready
       // https://caniuse.com/#search=background%20sync
-      if ("serviceWorker" in navigator && "SyncManager" in window) {
-        navigator.serviceWorker.ready
-          .then(sw => {
-            console.log(
-              "background sync event is supported in this browser and ready to fire!"
-            );
-            return sw.sync.register("send-review");
-          })
-          .catch(e => console.log(e, "could not register sync event"));
-      } else {
-        console.log(
-          "attempted to use background sync, but it is not supported by the current version of this browser yet"
-        );
-        // fall back to normal way of defering data
-        // when the browser doesn't support Background Sync
-        DBHelper.syncReviewWhenOnline();
-      }
+      // if ("serviceWorker" in navigator && "SyncManager" in window) {
+      //   navigator.serviceWorker.ready
+      //     .then(sw => {
+      //       console.log(
+      //         "background sync event is supported in this browser and ready to fire!"
+      //       );
+      //       return sw.sync.register("send-review");
+      //     })
+      //     .catch(e => console.log(e, "could not register sync event"));
+      // } else {
+      //   console.log(
+      //     "attempted to use background sync, but it is not supported by the current version of this browser yet"
+      //   );
+
+      // fall back to normal way of defering data
+      // when the browser doesn't support Background Sync
+      // DBHelper.syncReviewWhenOnline();
+      // }
+      // ---------------------------------
     }
   });
 

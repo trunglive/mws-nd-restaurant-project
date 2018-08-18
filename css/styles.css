@@ -403,30 +403,30 @@ nav #breadcrumb li a:hover {
   margin: 50px 40px 80px;
 }
 
-#reviews-container .add-review {
+#reviews-container .review-form {
   margin-bottom: 60px;
   padding: 20px;
   background-color: #fff;
   /* border: 1px solid red; */
 }
 
-#reviews-container .add-review > div {
+#reviews-container .review-form > div {
   margin: 20px 0;
 }
 
-#reviews-container .add-review label {
+#reviews-container .review-form label {
   margin-right: 10px;
 }
 
-#reviews-container .add-review .comment {
+#reviews-container .review-form .comment {
   display: flex;
 }
 
-#reviews-container .add-review .comment textarea {
+#reviews-container .review-form .comment textarea {
   width: 80%;
 }
 
-#reviews-container .add-review .submit-button input {
+#reviews-container .review-form .submit-button input {
   width: 80px;
   margin: 0 20px;
   padding: 5px;
@@ -436,7 +436,7 @@ nav #breadcrumb li a:hover {
   background-color: orange;
 }
 
-#reviews-container .add-review .submit-button {
+#reviews-container .review-form .submit-button {
   margin: 0;
 }
 

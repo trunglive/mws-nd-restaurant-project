@@ -52,7 +52,6 @@ class DBHelper {
             restaurants.map(restaurant => {
               return store.put(restaurant);
             });
-
             return tx.complete;
           })
           .then(() => console.log("successfully add restaurants to idb!"));
@@ -337,6 +336,7 @@ class DBHelper {
   /**
    * Defer review and send it when the connection is re-established
    */
+
   static syncReviewWhenOnline() {
     window.addEventListener("online", () => {
       console.log("the connection has been re-established!");
@@ -349,6 +349,10 @@ class DBHelper {
    */
   static addPendingReviewToBackend() {
     console.log("fetch pending review from idb...");
+    const reviewForm = window.document.getElementById("review-form");
+    const notification = window.document.getElementById("submit-notification");
+    const submit = window.document.getElementById("submit-button");
+
     DBHelper.createDB()
       .then(db => {
         const tx = db.transaction(["reviews"], "readonly");
@@ -366,6 +370,16 @@ class DBHelper {
             // to avoid sending duplicate reviews in the next user submission
             DBHelper.updateReviewState(pendingReview.id);
           });
+      })
+      .then(() => {
+        notification.innerHTML =
+          "The connection has been re-established. Your review has been sent. Please refresh the page.";
+        submit.value = "SENT!";
+        reviewForm.reset();
+      })
+      .catch(e => {
+        console.log(e, "error updating review to backend...");
+        notification.innerHTML = "Error sending review...";
       });
   }
 
