@@ -245,7 +245,7 @@ class DBHelper {
             reviews.map(review => {
               return store.put(review);
             });
-
+            
             return tx.complete;
           })
           .then(() => console.log("successfully added reviews to idb!"));
@@ -336,7 +336,6 @@ class DBHelper {
   /**
    * Defer review and send it when the connection is re-established
    */
-
   static syncReviewWhenOnline() {
     window.addEventListener("online", () => {
       console.log("the connection has been re-established!");
