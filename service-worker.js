@@ -86,17 +86,15 @@ self.addEventListener("fetch", event => {
   if (htmlDocument.test(event.request.url) === true) {
     event.respondWith(
       fetch(event.request)
-        .then(function(response) {
+        .then(response => {
           console.log(event.request);
           const responseToCache = response.clone();
-          caches.open(currentCache).then(function(cache) {
+          caches.open(currentCache).then(cache => {
             cache.put(event.request, responseToCache);
           });
           return response;
         })
-        .catch(function() {
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(event.request))
     );
   }
 });
