@@ -2,7 +2,7 @@ importScripts("js/idb.js");
 importScripts("js/dbhelper.js");
 
 const currentCache = "mws-restaurant-project-v1";
-const offlineUrls = ["/index.html", "/restaurant.html"];
+const HTMLFiles = ["/index.html", "/restaurant.html"];
 const imageUrls = [
   "/img/restaurant-photos/1.jpg",
   "/img/restaurant-photos/2.jpg",
@@ -32,7 +32,7 @@ const iconUrls = [
 self.addEventListener("install", event => {
   const urlsToCache = [
     "/",
-    ...offlineUrls,
+    ...HTMLFiles,
     ...imageUrls,
     ...iconUrls,
     "/css/styles.css",
@@ -51,6 +51,7 @@ self.addEventListener("install", event => {
   );
 });
 
+// activation phase of service worker
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -77,61 +78,25 @@ self.addEventListener("activate", event => {
   console.log("service worker activated", event);
 });
 
-// look in cache first, then fall back to network to keep caching
-// if network fails, fall back to cached offline pages
+// intercept network requests by using fetch event
 self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.open(currentCache).then(cache => {
-      // check to see whether the request exists in the cache or not
-      return cache.match(event.request).then(response => {
-        if (response) {
-          return response;
-        }
-
-        // if the requested resource doesn't exist,
-        // continue to make request
-        // and add response into the cache
-        // in the case of failed fetch and the next page could not be retrieved,
-        // fall back to previously cached offline source
-        const fetchRequest = event.request.clone();
-
-        return fetch(fetchRequest)
-          .then(response => {
-            if (!response || response.status !== 200) {
-              return response;
-            } else {
-              const responseToCache = response.clone();
-              if (
-                !event.request.url.includes("/restaurants/") &&
-                !event.request.url.includes("/reviews/")
-              ) {
-                cache.put(event.request.url, responseToCache);
-              } else {
-                // console.log("this event request is not cached");
-              }
-
-              return response;
-            }
-          })
-          .catch(error => {
-            console.log(error);
-            if (
-              event.request.method === "GET" &&
-              event.request.headers.get("accept").includes("text/html")
-            ) {
-              // return offline pages in cache from previous installation of service worker
-              return caches.match(offlineUrls);
-            }
+  // for .html files, fetch update from network first, then add it to cache
+  // if offline, serve data from cache
+  const htmlDocument = /(\/|\.html)$/i;
+  if (htmlDocument.test(event.request.url) === true) {
+    event.respondWith(
+      fetch(event.request)
+        .then(function(response) {
+          console.log(event.request);
+          const responseToCache = response.clone();
+          caches.open(currentCache).then(function(cache) {
+            cache.put(event.request, responseToCache);
           });
-      });
-    })
-  );
+          return response;
+        })
+        .catch(function() {
+          return caches.match(event.request);
+        })
+    );
+  }
 });
-
-// synchronize data to database when connection is back
-// by using Background Sync feature
-// self.addEventListener("sync", event => {
-//   if (event.tag === "send-review") {
-//     event.waitUntil(DBHelper.addPendingReviewToBackend());
-//   }
-// });
