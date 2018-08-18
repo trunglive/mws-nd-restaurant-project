@@ -47,7 +47,7 @@ self.addEventListener("install", event => {
     "/manifest.json"
   ];
 
-  console.log("Service Worker installed", event);
+  console.log("service worker installed", event);
   event.waitUntil(
     caches.open(currentCache).then(cache => cache.addAll(urlsToCache))
   );
@@ -74,13 +74,14 @@ self.addEventListener("activate", event => {
   );
 
   // cache restaurants and reviews in IndexedDB database
-  // event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
-  console.log("Service Worker activated", event);
+  // during activation of service worker
+  event.waitUntil(DBHelper.cacheRestaurants(), DBHelper.cacheReviews());
+  console.log("service worker activated", event);
 });
 
-// fetch data from service worker in offline mode
+// look in cache first, then fall back to network to keep caching
+// if network fails, fall back to cached offline pages
 self.addEventListener("fetch", event => {
-  console.log(event.request, "event request object");
   event.respondWith(
     caches.open(currentCache).then(cache => {
       // check to see whether the request exists in the cache or not
@@ -89,8 +90,11 @@ self.addEventListener("fetch", event => {
           return response;
         }
 
-        // if it doesn't exist, add response into the cache
-        // in the case of failed fetch, fall back to cached offline source
+        // if the requested resource doesn't exist,
+        // continue to make request
+        // and add response into the cache
+        // in the case of failed fetch and the next page could not be retrieved,
+        // fall back to previously cached offline source
         const fetchRequest = event.request.clone();
 
         return fetch(fetchRequest)
@@ -103,20 +107,21 @@ self.addEventListener("fetch", event => {
                 !event.request.url.includes("/restaurants/") &&
                 !event.request.url.includes("/reviews/")
               ) {
-                console.log(event.request.url, "this event request is cached");
                 cache.put(event.request.url, responseToCache);
               } else {
-                console.log("this event request is not cached");
+                // console.log("this event request is not cached");
               }
 
               return response;
             }
           })
           .catch(error => {
+            console.log(error);
             if (
               event.request.method === "GET" &&
               event.request.headers.get("accept").includes("text/html")
             ) {
+              // return offline pages in cache from previous installation of service worker
               return caches.match(offlineUrls);
             }
           });
@@ -126,24 +131,9 @@ self.addEventListener("fetch", event => {
 });
 
 // synchronize data to database when connection is back
+// by using Background Sync feature
 self.addEventListener("sync", event => {
   if (event.tag === "send-review") {
-    event.waitUntil(
-      DBHelper.createDB()
-        .then(db => {
-          const tx = db.transaction(["reviews"], "readonly");
-          const store = tx.objectStore("reviews");
-          return store.getAll();
-        })
-        .then(reviews => {
-          return reviews
-            .filter(review => review.reviewState === "pending")
-            .map(pendingReview => {
-              // create finalReview object without property reviewState
-              const { reviewState, ...finalReview } = pendingReview;
-              DBHelper.addNewReviewToBackend(finalReview);
-            });
-        })
-    );
+    event.waitUntil(DBHelper.addPendingReviewToBackend());
   }
 });

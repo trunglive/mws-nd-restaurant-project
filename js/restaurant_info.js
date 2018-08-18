@@ -5,8 +5,6 @@ var newMap;
  * Initialize map as soon as the page is loaded.
  */
 document.addEventListener("DOMContentLoaded", event => {
-  DBHelper.cacheRestaurants();
-  DBHelper.cacheReviews();
   initMap();
   console.log("DOM loaded!");
 });
@@ -88,11 +86,6 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   name.innerHTML = restaurant.name;
 
   const favoriteIcon = document.getElementById("favorite-toggle-icon");
-  console.log(
-    "current icon for favorite state",
-    DBHelper.favoriteState(restaurant).url
-  );
-
   favoriteIcon.src = DBHelper.favoriteState(restaurant).url;
   favoriteIcon.alt = `${restaurant.name} Restaurant is ${
     DBHelper.favoriteState(restaurant).state
@@ -179,38 +172,52 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
       createdAt: new Date().getTime(),
       updatedAt: new Date().getTime(),
       rating: parseInt(rating),
-      comments,
-      reviewState: "pending"
+      comments
     };
-
-    DBHelper.addNewReviewToCache(reviewContent);
-
-    // Check the browser support of Background Sync
-    // https://jakearchibald.github.io/isserviceworkerready
-    // https://caniuse.com/#search=background%20sync
-    if ("serviceWorker" in navigator && "SyncManager" in window) {
-      navigator.serviceWorker.ready
-        .then(sw => {
-          console.log("sync event is ready in browser!");
-          return sw.sync.register("send-review");
-        })
-        .catch(e => console.log(e, "could not register sync event"));
-    } else {
-      console.log("background sync is not supported by this browser yet");
-    }
-
-    // DBHelper.addNewReviewToBackend(reviewContent);
 
     submit.value = "SENDING...";
 
+    DBHelper.addNewReviewToCache(reviewContent);
+
     if (navigator.onLine) {
+      // add review directly to backend when connection is still available
+      DBHelper.addNewReviewToBackend(reviewContent);
+
       setTimeout(() => {
+        review.reset();
         window.location.reload();
       }, 2000);
     } else {
+      // when there is no connection
+      // add pending state to review object
+      // and save review in IndexedDB
+      const pendingReviewContent = { ...reviewContent, reviewState: "pending" };
+      DBHelper.addNewReviewToCache(pendingReviewContent);
+
       console.log("network error!");
       notification.innerHTML =
         "Network error! Your review will be automatically updated once the connection is re-established";
+
+      // Experiment with Background Sync to defer data until the connection is stable
+      // Check the browser support of Background Sync
+      // https://jakearchibald.github.io/isserviceworkerready
+      // https://caniuse.com/#search=background%20sync
+      if ("serviceWorker" in navigator && "SyncManager" in window) {
+        navigator.serviceWorker.ready
+          .then(sw => {
+            console.log(
+              "background sync event is supported in this browser and ready to fire!"
+            );
+            return sw.sync.register("send-review");
+          })
+          .catch(e => console.log(e, "could not register sync event"));
+      } else {
+        console.log(
+          "attempted to use background sync, but it is not supported by the current version of this browser yet"
+        );
+        // defer data in normal way without Background Sync
+        DBHelper.syncReviewWhenOnline();
+      }
     }
   });
 

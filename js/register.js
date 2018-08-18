@@ -11,11 +11,6 @@ if ("serviceWorker" in navigator) {
       .catch(error => {
         console.log("service worker failed to register", error);
       });
-
-    // navigator.serviceWorker.ready.then(registration => {
-    //   registration.sync.register("toggle-restaurant-favorite");
-    //   registration.sync.register("send-restaurant-review");
-    // });
   });
 } else {
   console.log("browser has not yet supported service worker");

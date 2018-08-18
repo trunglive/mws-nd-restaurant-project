@@ -44,38 +44,18 @@ class DBHelper {
     return fetch(DBHelper.RESTAURANT_URL)
       .then(data => data.json())
       .then(restaurants => {
-        return DBHelper.createDB().then(db => {
-          const tx = db.transaction("restaurants", "readwrite");
-          const store = tx.objectStore("restaurants");
+        return DBHelper.createDB()
+          .then(db => {
+            const tx = db.transaction("restaurants", "readwrite");
+            const store = tx.objectStore("restaurants");
 
-          restaurants.map(restaurant => {
-            console.log("Adding restaurant: ", restaurant, " to idb");
-            return store.put(restaurant);
-          });
+            restaurants.map(restaurant => {
+              return store.put(restaurant);
+            });
 
-          return tx.complete;
-        });
-      });
-  }
-
-  /**
-   * Fetch reviews from backend and cache them in IndexedDB
-   */
-  static cacheReviews() {
-    return fetch(DBHelper.REVIEW_URL)
-      .then(data => data.json())
-      .then(reviews => {
-        return DBHelper.createDB().then(db => {
-          const tx = db.transaction("reviews", "readwrite");
-          const store = tx.objectStore("reviews");
-
-          reviews.map(review => {
-            console.log("Adding review: ", review, " to idb");
-            return store.put(review);
-          });
-
-          return tx.complete;
-        });
+            return tx.complete;
+          })
+          .then(() => console.log("successfully add restaurants to idb!"));
       });
   }
 
@@ -88,11 +68,14 @@ class DBHelper {
     fetch(DBHelper.RESTAURANT_URL)
       .then(data => data.json())
       .then(restaurants => {
-        console.log(restaurants, "ONLINE, fetched restaurants from backend");
+        console.log(restaurants, "ONLINE, fetched restaurants from backend!");
         callback(null, restaurants);
       })
       .catch(error => {
-        console.log(error, "OFFLINE, could not fetch restaurants from backend");
+        console.log(
+          error,
+          "OFFLINE, could not fetch restaurants from backend!"
+        );
         callback(error, null);
 
         // fetch from IndexedDB database
@@ -104,7 +87,7 @@ class DBHelper {
             return store.getAll();
           })
           .then(restaurants => {
-            console.log("fetched restaurants from IndexedDB instead");
+            console.log("fetched restaurants from IndexedDB instead!");
             callback(null, restaurants);
           });
       });
@@ -249,6 +232,28 @@ class DBHelper {
   }
 
   /**
+   * Fetch reviews from backend and cache them in IndexedDB
+   */
+  static cacheReviews() {
+    return fetch(DBHelper.REVIEW_URL)
+      .then(data => data.json())
+      .then(reviews => {
+        return DBHelper.createDB()
+          .then(db => {
+            const tx = db.transaction("reviews", "readwrite");
+            const store = tx.objectStore("reviews");
+
+            reviews.map(review => {
+              return store.put(review);
+            });
+
+            return tx.complete;
+          })
+          .then(() => console.log("successfully added reviews to idb!"));
+      });
+  }
+
+  /**
    * Fetch all reviews from server
    * In case of network failure, fetch from IndexedDB
    */
@@ -257,11 +262,11 @@ class DBHelper {
     fetch(DBHelper.REVIEW_URL)
       .then(data => data.json())
       .then(reviews => {
-        console.log(reviews, "ONLINE, fetched reviews from backend");
+        console.log(reviews, "ONLINE, fetched reviews from backend!");
         callback(null, reviews);
       })
       .catch(error => {
-        console.log(error, "OFFLINE, could not fetch reviews from backend");
+        console.log(error, "OFFLINE, could not fetch reviews from backend!");
         callback(error, null);
 
         // fetch from IndexedDB database
@@ -273,7 +278,7 @@ class DBHelper {
             return store.getAll();
           })
           .then(reviews => {
-            console.log("fetched reviews from IndexedDB instead");
+            console.log("fetched reviews from IndexedDB instead!");
             callback(null, reviews);
           });
       });
@@ -306,31 +311,63 @@ class DBHelper {
    * Cache new review in IndexedDB database
    */
   static addNewReviewToCache(content) {
-    return DBHelper.createDB().then(db => {
-      const tx = db.transaction("reviews", "readwrite");
-      const store = tx.objectStore("reviews");
-      store.put(content);
-      console.log("review sent to idb");
-      return tx.complete;
-    });
+    return DBHelper.createDB()
+      .then(db => {
+        const tx = db.transaction("reviews", "readwrite");
+        const store = tx.objectStore("reviews");
+        store.put(content);
+        return tx.complete;
+      })
+      .then(() => console.log("review sent to idb!"));
   }
 
   /**
    * Send new review to backend database
    */
   static addNewReviewToBackend(content) {
-    console.log("review sent to backend");
     return fetch(DBHelper.REVIEW_URL, {
       method: "POST",
       headers: new Headers({
         "Content-Type": "application/json"
       }),
       body: JSON.stringify(content)
+    }).then(() => console.log("review sent to backend!"));
+  }
+
+  /**
+   * Defer review and send it when the connection is re-established
+   */
+  static syncReviewWhenOnline() {
+    window.addEventListener("online", () => {
+      console.log("the connection has been re-established!");
+      DBHelper.addPendingReviewToBackend();
     });
   }
 
   /**
-   * Check whether the restaurant is favorite or not
+   * Add pending review to backend
+   */
+  static addPendingReviewToBackend() {
+    console.log("fetch pending review from idb...");
+    DBHelper.createDB()
+      .then(db => {
+        const tx = db.transaction(["reviews"], "readonly");
+        const store = tx.objectStore("reviews");
+        return store.getAll();
+      })
+      .then(reviews => {
+        return reviews
+          .filter(review => review.reviewState === "pending")
+          .map(pendingReview => {
+            // create finalReview object without property reviewState
+            const { reviewState, ...finalReview } = pendingReview;
+            DBHelper.addNewReviewToBackend(finalReview);
+          });
+      });
+  }
+
+  /**
+   * Toggle favorite state for each restaurant
    */
   static favoriteState(restaurant) {
     if (restaurant.is_favorite.toString() === "true") {
@@ -358,7 +395,7 @@ class DBHelper {
         console.log(restaurant, "current restaurant in the store");
         restaurant.is_favorite = state;
         store.put(restaurant);
-        console.log("favorite state sent to idb");
+
         return tx.complete;
       });
     });
@@ -368,8 +405,6 @@ class DBHelper {
    * Send favorite state to backend database
    */
   static addFavoriteStateToBackend(restaurant, state) {
-    console.log("favorite state sent to backend");
-
     return fetch(
       `http://localhost:1337/restaurants/${
         restaurant.id
@@ -394,6 +429,7 @@ class DBHelper {
     });
     const year = convertedFormat.getFullYear();
     const result = `${month} ${date}, ${year}`;
+
     return result;
   }
 
@@ -411,6 +447,7 @@ class DBHelper {
       }
     );
     marker.addTo(newMap);
+    
     return marker;
   }
 }
