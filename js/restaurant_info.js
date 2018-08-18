@@ -175,15 +175,15 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
       comments
     };
 
-    submit.value = "SENDING...";
-
-    DBHelper.addNewReviewToCache(reviewContent);
-
     if (navigator.onLine) {
-      // add review directly to backend when connection is still available
+      // add review to IndexedDB and backend when connection is still on
+      DBHelper.addNewReviewToCache(reviewContent);
       DBHelper.addNewReviewToBackend(reviewContent);
 
+      submit.value = "SENDING...";
+
       setTimeout(() => {
+        
         review.reset();
         window.location.reload();
       }, 2000);
@@ -196,9 +196,11 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
 
       console.log("network error!");
       notification.innerHTML =
-        "Network error! Your review will be automatically updated once the connection is re-established";
+        "Network error! Your review will be automatically updated once the connection is re-established. Please check back later.";
 
-      // Experiment with Background Sync to defer data until the connection is stable
+      // Experiment with Background Sync to defer data until the connection is stable,
+      // even when tab or browser is closed
+      // Register send-review tag and let "sync" event do the deferred work in service worker
       // Check the browser support of Background Sync
       // https://jakearchibald.github.io/isserviceworkerready
       // https://caniuse.com/#search=background%20sync
@@ -215,7 +217,8 @@ fillReviewsHTML = (restaurant = self.restaurant, reviews = self.reviews) => {
         console.log(
           "attempted to use background sync, but it is not supported by the current version of this browser yet"
         );
-        // defer data in normal way without Background Sync
+        // fall back to normal way of defering data
+        // when the browser doesn't support Background Sync
         DBHelper.syncReviewWhenOnline();
       }
     }

@@ -362,8 +362,29 @@ class DBHelper {
             // create finalReview object without property reviewState
             const { reviewState, ...finalReview } = pendingReview;
             DBHelper.addNewReviewToBackend(finalReview);
+            // update state of each review in IndexedDB after sending it to backend
+            // to avoid sending duplicate reviews in the next user submission
+            DBHelper.updateReviewState(pendingReview.id);
           });
       });
+  }
+
+  /**
+   * Change review state from pending to complete
+   * Then update it in IndexedDB
+   */
+  static updateReviewState(id) {
+    DBHelper.createDB().then(db => {
+      const tx = db.transaction("reviews", "readwrite");
+      const store = tx.objectStore("reviews");
+
+      return store.get(id).then(review => {
+        review.reviewState = "done";
+        store.put(review);
+        return tx.complete;
+      });
+    });
+    console.log('pending review has been updated to "done" in idb');
   }
 
   /**
@@ -392,10 +413,8 @@ class DBHelper {
       const store = tx.objectStore("restaurants");
 
       return store.get(restaurant.id).then(restaurant => {
-        console.log(restaurant, "current restaurant in the store");
         restaurant.is_favorite = state;
         store.put(restaurant);
-
         return tx.complete;
       });
     });
@@ -447,7 +466,7 @@ class DBHelper {
       }
     );
     marker.addTo(newMap);
-    
+
     return marker;
   }
 }

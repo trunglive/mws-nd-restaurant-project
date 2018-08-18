@@ -2,9 +2,7 @@ importScripts("js/idb.js");
 importScripts("js/dbhelper.js");
 
 const currentCache = "mws-restaurant-project-v1";
-
 const offlineUrls = ["/index.html", "/restaurant.html"];
-
 const imageUrls = [
   "/img/restaurant-photos/1.jpg",
   "/img/restaurant-photos/2.jpg",
